@@ -10,7 +10,7 @@ CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # --- DATABASE CONNECTION ---
-MONGO_URI = os.environ.get('MONGO_URI', '')
+MONGO_URI = os.environ.get('MONGO_URI', 'mongodb+srv://chiragnegi14_db_user:1486chirag@cluster0.m5fw1q6.mongodb.net/?appName=Cluster0')
 _db = None
 
 def get_db():
