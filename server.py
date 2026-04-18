@@ -1,60 +1,34 @@
-import eventlet
-eventlet.monkey_patch()
-
 import os
+import json
 import uuid
 from flask import Flask, request, jsonify, send_from_directory
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO
 from flask_cors import CORS
-from pymongo import MongoClient
 
 app = Flask(__name__, static_folder='public', static_url_path='')
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+socketio = SocketIO(app, cors_allowed_origins="*")
 
-# --- DATABASE CONNECTION ---
-MONGO_URI = os.environ.get('MONGO_URI', 'mongodb+srv://chiragnegi14_db_user:1486chirag@cluster0.m5fw1q6.mongodb.net/?appName=Cluster0')
-
-# Initialize once at startup. Monkey-patch runs first so SSL is already patched.
-_client = MongoClient(MONGO_URI)
-db = _client['sahayata']
-
-# Ensure the master admin always exists (idempotent)
-db.admins.update_one(
-    {"name": "admin@123"},
-    {"$setOnInsert": {"id": "admin-1", "name": "admin@123", "password": "fusionhacks"}},
-    upsert=True
-)
-
-def get_db():
-    return db
-
+DATA_FILE = 'data.json'
 
 def load_data():
-    db = get_db()
-    return {
-        'donors':        list(db.donors.find({}, {'_id': 0})),
-        'ngos':          list(db.ngos.find({}, {'_id': 0})),
-        'food_listings': list(db.food_listings.find({}, {'_id': 0})),
-        'requests':      list(db.requests.find({}, {'_id': 0})),
-        'admins':        list(db.admins.find({}, {'_id': 0})),
-    }
+    d = {"donors": [], "ngos": [], "food_listings": [], "requests": [], "admins": []}
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, 'r') as f:
+            try:
+                loaded = json.load(f)
+                d.update(loaded)
+            except json.JSONDecodeError:
+                pass
+    for key in ["donors", "ngos", "food_listings", "requests", "admins"]:
+        if key not in d: d[key] = []
+    if not any(a['name'] == 'admin@123' for a in d['admins']):
+        d['admins'].append({"id": "admin-1", "name": "admin@123", "password": "fusionhacks"})
+    return d
 
 def save_data(data):
-    """Sync in-memory data back to MongoDB using upsert by 'id' field."""
-    db = get_db()
-    for collection_name in ['donors', 'ngos', 'food_listings', 'requests']:
-        for item in data.get(collection_name, []):
-            db[collection_name].update_one(
-                {'id': item['id']},
-                {'$set': item},
-                upsert=True
-            )
-
-def delete_from_db(collection_name, field, value):
-    """Helper to delete documents from a collection."""
-    db = get_db()
-    db[collection_name].delete_many({field: value})
+    with open(DATA_FILE, 'w') as f:
+        json.dump(data, f, indent=4)
 
 # --- STATIC ROUTING ---
 @app.route('/')
@@ -70,73 +44,57 @@ def serve_static(path):
 # --- AUTHENTICATION ---
 @app.route('/api/register', methods=['POST'])
 def register():
-    db = get_db()
+    data = load_data()
     content = request.json
     role = content.get('role')
-
     if role == 'donor':
-        if db.donors.find_one({'name': content.get('name')}, {'_id': 0}):
-            return jsonify({"error": "User Name exists"}), 400
-        new_user = {
-            "id": str(uuid.uuid4()),
-            "name": content.get('name'),
-            "phone": content.get('phone'),
-            "password": content.get('password')
-        }
-        db.donors.insert_one({**new_user})
+        for u in data['donors']:
+            if u['name'] == content.get('name'):
+                return jsonify({"error": "User Name exists"}), 400
+        new_user = {"id": str(uuid.uuid4()), "name": content.get('name'), "phone": content.get('phone'), "password": content.get('password')}
+        data['donors'].append(new_user)
     elif role == 'ngo':
-        if db.ngos.find_one({'name': content.get('name')}, {'_id': 0}):
-            return jsonify({"error": "NGO Name exists"}), 400
-        new_user = {
-            "id": str(uuid.uuid4()),
-            "name": content.get('name'),
-            "capacity": content.get('capacity'),
-            "location": content.get('location'),
-            "password": content.get('password')
-        }
-        db.ngos.insert_one({**new_user})
+        for u in data['ngos']:
+            if u['name'] == content.get('name'):
+                return jsonify({"error": "NGO Name exists"}), 400
+        new_user = {"id": str(uuid.uuid4()), "name": content.get('name'), "capacity": content.get('capacity'), "location": content.get('location'), "password": content.get('password')}
+        data['ngos'].append(new_user)
     else:
         return jsonify({"error": "Invalid role"}), 400
-
+    save_data(data)
     user_out = {k: v for k, v in new_user.items() if k != 'password'}
     user_out['role'] = role
     return jsonify(user_out), 201
 
 @app.route('/api/login', methods=['POST'])
 def login():
-    db = get_db()
+    data = load_data()
     content = request.json
     name = content.get('name')
     password = content.get('password')
-
-    u = db.donors.find_one({'name': name, 'password': password}, {'_id': 0})
-    if u:
-        user_out = {k: v for k, v in u.items() if k != 'password'}
-        user_out['role'] = 'donor'
-        return jsonify(user_out), 200
-
-    u = db.ngos.find_one({'name': name, 'password': password}, {'_id': 0})
-    if u:
-        user_out = {k: v for k, v in u.items() if k != 'password'}
-        user_out['role'] = 'ngo'
-        return jsonify(user_out), 200
-
-    u = db.admins.find_one({'name': name, 'password': password}, {'_id': 0})
-    if u:
-        user_out = {k: v for k, v in u.items() if k != 'password'}
-        user_out['role'] = 'admin'
-        return jsonify(user_out), 200
-
+    for u in data['donors']:
+        if u['name'] == name and u['password'] == password:
+            user_out = {k: v for k, v in u.items() if k != 'password'}
+            user_out['role'] = 'donor'
+            return jsonify(user_out), 200
+    for u in data['ngos']:
+        if u['name'] == name and u['password'] == password:
+            user_out = {k: v for k, v in u.items() if k != 'password'}
+            user_out['role'] = 'ngo'
+            return jsonify(user_out), 200
+    for u in data.get('admins', []):
+        if u['name'] == name and u['password'] == password:
+            user_out = {k: v for k, v in u.items() if k != 'password'}
+            user_out['role'] = 'admin'
+            return jsonify(user_out), 200
     return jsonify({"error": "Invalid credentials"}), 401
 
 # --- CORE LOGIC ---
 def enrich_listing(listing, data_ref, current_user_id=None, current_role=None):
     enrich = dict(listing)
-
     for d in data_ref['donors']:
         if d['id'] == listing['donor_id']:
             enrich['donor_name'] = d['name']
-
     if listing['status'] == 'available' and current_role == 'donor' and current_user_id == listing['donor_id']:
         enrich['pending_requests'] = []
         for req in data_ref['requests']:
@@ -146,12 +104,10 @@ def enrich_listing(listing, data_ref, current_user_id=None, current_role=None):
                     if ngo['id'] == req['ngo_id']:
                         ngo_info.update({"name": ngo['name'], "capacity": ngo['capacity'], "location": ngo['location']})
                 enrich['pending_requests'].append(ngo_info)
-
     if listing['status'] == 'available' and current_role == 'ngo':
         for req in data_ref['requests']:
             if req['food_id'] == listing['id'] and req['ngo_id'] == current_user_id and req['status'] == 'pending':
                 enrich['ngo_has_pending'] = True
-
     if enrich['status'] in ['claimed', 'completed']:
         for req in data_ref['requests']:
             if req['food_id'] == listing['id'] and req['status'] == 'accepted':
@@ -159,7 +115,6 @@ def enrich_listing(listing, data_ref, current_user_id=None, current_role=None):
                 for ngo in data_ref['ngos']:
                     if ngo['id'] == req['ngo_id']:
                         enrich['ngo_name'] = ngo['name']
-
                 if (current_role == 'donor' and current_user_id == listing['donor_id']) or \
                    (current_role == 'ngo' and current_user_id == req['ngo_id']):
                     for d in data_ref['donors']:
@@ -177,7 +132,6 @@ def get_listings():
     data = load_data()
     listings = data['food_listings']
     filtered = []
-
     if role == 'donor' and user_id:
         filtered = [enrich_listing(l, data, user_id, role) for l in listings if l['donor_id'] == user_id]
     elif role == 'ngo':
@@ -188,82 +142,78 @@ def get_listings():
                 my_reqs = [r for r in data['requests'] if r['food_id'] == l['id'] and r['ngo_id'] == user_id and r['status'] == 'accepted']
                 if my_reqs:
                     filtered.append(enrich_listing(l, data, user_id, role))
-
     return jsonify(filtered)
 
 @app.route('/api/listings', methods=['POST'])
 def add_listing():
-    db = get_db()
     content = request.json
     new_listing = {
-        "id": str(uuid.uuid4()),
-        "donor_id": content.get("donor_id"),
-        "food_type": content.get("food_type"),
-        "quantity": content.get("quantity"),
-        "expiry_time": content.get("expiry_time"),
-        "location": content.get("location"),
-        "auto_accept": content.get("auto_accept", False),
-        "status": "available"
+        "id": str(uuid.uuid4()), "donor_id": content.get("donor_id"),
+        "food_type": content.get("food_type"), "quantity": content.get("quantity"),
+        "expiry_time": content.get("expiry_time"), "location": content.get("location"),
+        "auto_accept": content.get("auto_accept", False), "status": "available"
     }
-    db.food_listings.insert_one({**new_listing})
     data = load_data()
+    data['food_listings'].insert(0, new_listing)
+    save_data(data)
     enriched = enrich_listing(new_listing, data)
     socketio.emit('new_listing', enriched)
     return jsonify(enriched), 201
 
 @app.route('/api/listings/<listing_id>/request', methods=['POST'])
 def request_listing(listing_id):
-    db = get_db()
     content = request.json
     ngo_id = content.get("ngo_id")
-
-    target_listing = db.food_listings.find_one({'id': listing_id, 'status': 'available'}, {'_id': 0})
+    data = load_data()
+    target_listing = None
+    for l in data['food_listings']:
+        if l['id'] == listing_id and l['status'] == 'available':
+            target_listing = l
+            break
     if not target_listing:
         return jsonify({"error": "Listing not available"}), 400
-
     auto_accept = target_listing.get('auto_accept', False)
     req_status = 'accepted' if auto_accept else 'pending'
-
     if auto_accept:
-        db.food_listings.update_one({'id': listing_id}, {'$set': {'status': 'claimed'}})
-
-    new_request = {
-        "id": str(uuid.uuid4()),
-        "ngo_id": ngo_id,
-        "food_id": listing_id,
-        "status": req_status
-    }
-    db.requests.insert_one({**new_request})
+        target_listing['status'] = 'claimed'
+    new_request = {"id": str(uuid.uuid4()), "ngo_id": ngo_id, "food_id": listing_id, "status": req_status}
+    data['requests'].append(new_request)
+    save_data(data)
     socketio.emit('listing_updated')
     return jsonify({"success": True, "status": req_status}), 200
 
 @app.route('/api/listings/<listing_id>/approve', methods=['POST'])
 def approve_request(listing_id):
-    db = get_db()
     content = request.json
     request_id = content.get("request_id")
-
-    db.food_listings.update_one({'id': listing_id}, {'$set': {'status': 'claimed'}})
-    db.requests.update_one({'id': request_id}, {'$set': {'status': 'accepted'}})
-    db.requests.update_many({'food_id': listing_id, 'status': 'pending', 'id': {'$ne': request_id}}, {'$set': {'status': 'rejected'}})
-
+    data = load_data()
+    for l in data['food_listings']:
+        if l['id'] == listing_id:
+            l['status'] = 'claimed'
+            break
+    for req in data['requests']:
+        if req['food_id'] == listing_id:
+            req['status'] = 'accepted' if req['id'] == request_id else ('rejected' if req['status'] == 'pending' else req['status'])
+    save_data(data)
     socketio.emit('listing_updated')
     return jsonify({"success": True}), 200
 
 @app.route('/api/listings/<listing_id>/complete', methods=['POST'])
 def complete_listing(listing_id):
-    db = get_db()
-    result = db.food_listings.update_one({'id': listing_id, 'status': 'claimed'}, {'$set': {'status': 'completed'}})
-    if result.modified_count:
-        socketio.emit('listing_updated')
-        return jsonify({"success": True}), 200
+    data = load_data()
+    for l in data['food_listings']:
+        if l['id'] == listing_id and l['status'] == 'claimed':
+            l['status'] = "completed"
+            save_data(data)
+            socketio.emit('listing_updated')
+            return jsonify({"success": True}), 200
     return jsonify({"error": "Failed to complete"}), 400
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
-    db = get_db()
-    completed_count = db.food_listings.count_documents({'status': 'completed'})
-    ngo_count = db.ngos.count_documents({})
+    data = load_data()
+    completed_count = len([l for l in data['food_listings'] if l['status'] == 'completed'])
+    ngo_count = len(data['ngos'])
     return jsonify({"meals_saved": completed_count, "active_ngos": ngo_count})
 
 # --- ADMIN ENDPOINTS ---
@@ -274,25 +224,23 @@ def admin_overview():
 
 @app.route('/api/admin/delete-listing/<listing_id>', methods=['DELETE'])
 def admin_delete_listing(listing_id):
-    db = get_db()
-    db.food_listings.delete_one({'id': listing_id})
-    db.requests.delete_many({'food_id': listing_id})
+    data = load_data()
+    data['food_listings'] = [l for l in data['food_listings'] if l['id'] != listing_id]
+    data['requests'] = [r for r in data['requests'] if r['food_id'] != listing_id]
+    save_data(data)
     socketio.emit('listing_updated')
     return jsonify({"success": True}), 200
 
 @app.route('/api/admin/delete-user/<role>/<user_id>', methods=['DELETE'])
 def admin_delete_user(role, user_id):
-    db = get_db()
+    data = load_data()
     if role == 'donor':
-        db.donors.delete_one({'id': user_id})
-        listing_ids = [l['id'] for l in db.food_listings.find({'donor_id': user_id}, {'_id': 0, 'id': 1})]
-        db.food_listings.delete_many({'donor_id': user_id})
-        if listing_ids:
-            db.requests.delete_many({'food_id': {'$in': listing_ids}})
+        data['donors'] = [u for u in data['donors'] if u['id'] != user_id]
+        data['food_listings'] = [l for l in data['food_listings'] if l['donor_id'] != user_id]
     elif role == 'ngo':
-        db.ngos.delete_one({'id': user_id})
-        db.requests.delete_many({'ngo_id': user_id})
-
+        data['ngos'] = [u for u in data['ngos'] if u['id'] != user_id]
+        data['requests'] = [r for r in data['requests'] if r['ngo_id'] != user_id]
+    save_data(data)
     socketio.emit('listing_updated')
     return jsonify({"success": True}), 200
 
