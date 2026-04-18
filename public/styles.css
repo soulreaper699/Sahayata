@@ -407,8 +407,158 @@ h1, h2, h3 { font-family: var(--font-heading); font-weight: 600; color: var(--te
     animation: spin 1s linear infinite;
 }
 
+/* Premium Footer */
+.main-footer {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--card-border);
+    padding: 5rem 5% 2rem;
+    margin-top: 4rem;
+    position: relative;
+    z-index: 10;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 4rem;
+    margin-bottom: 4rem;
+}
+
+.footer-brand h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1.2rem;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.footer-section h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.footer-links {
+    list-style: none;
+}
+
+.footer-links li {
+    margin-bottom: 0.8rem;
+}
+
+.footer-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: var(--transition);
+    font-size: 0.95rem;
+}
+
+.footer-links a:hover {
+    color: var(--primary-color);
+    padding-left: 5px;
+}
+
+.contact-info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.icon-circle {
+    width: 36px;
+    height: 36px;
+    background: rgba(229, 107, 79, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+}
+
+/* Contact Form "Talk with us!" */
+.footer-contact-form {
+    background: rgba(255, 255, 255, 0.5);
+    padding: 2rem;
+    border-radius: 16px;
+    border: 1px solid var(--card-border);
+}
+
+.footer-contact-form input, 
+.footer-contact-form textarea {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+    background: white;
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 8px;
+    font-family: var(--font-body);
+    transition: var(--transition);
+}
+
+.footer-contact-form input:focus, 
+.footer-contact-form textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.footer-socials {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.social-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text-main);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: var(--transition);
+    font-size: 1.2rem;
+}
+
+.social-btn:hover {
+    transform: translateY(-5px);
+    background: var(--primary-color);
+    color: white;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        text-align: center;
+    }
+    .footer-socials {
+        justify-content: center;
+    }
+    .contact-info-item {
+        justify-content: center;
+    }
 }

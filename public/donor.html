@@ -74,6 +74,60 @@
         </div>
     </div>
 
+    <footer class="main-footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <h2>Sahayata</h2>
+                <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem;">Empowering donors to make a difference. Every listing helps bridge the gap between waste and social welfare.</p>
+                <div class="footer-socials">
+                    <a href="#" class="social-btn" title="Twitter">𝕏</a>
+                    <a href="#" class="social-btn" title="LinkedIn">in</a>
+                    <a href="#" class="social-btn" title="Instagram">📸</a>
+                </div>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul class="footer-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="donor.html">Dashboard</a></li>
+                    <li><a href="#" onclick="logout()">Logout</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h3>Support Helpline</h3>
+                <div class="contact-info-item">
+                    <div class="icon-circle">📞</div>
+                    <div>
+                        <p style="font-weight: 600; margin:0; color: var(--text-main);">Helpline</p>
+                        <p style="margin:0;">+91 1800 572 4292</p>
+                    </div>
+                </div>
+                <div class="contact-info-item">
+                    <div class="icon-circle">📧</div>
+                    <div>
+                        <p style="font-weight: 600; margin:0; color: var(--text-main);">Email Support</p>
+                        <p style="margin:0;">hello@sahayata.org</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <div class="footer-contact-form">
+                    <h3 style="margin-bottom: 1rem; font-size: 1.2rem; text-transform: none; letter-spacing: 0;">Talk with us!</h3>
+                    <form onsubmit="event.preventDefault(); alert('Thank you! Our support team will reach out to you shortly.')">
+                        <input type="email" placeholder="Your Email" required>
+                        <textarea placeholder="How can we help?" rows="3" required></textarea>
+                        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 0.5rem;">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Sahayata Platform. Donor Impact Hub.</p>
+        </div>
+    </footer>
     <script src="auth.js"></script>
     <script src="app.js"></script>
 </body>
