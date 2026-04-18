@@ -268,5 +268,23 @@ def complete_listing(listing_id):
 
     return jsonify({"error": "Failed to complete"}), 400
 
+@app.route('/api/stats', methods=['GET'])
+def get_stats():
+    data = load_data()
+    completed_meals = 0
+    # Sum up quantities for completed listings
+    # Assuming quantity string like "5kg" or "10 boxes" - we'll just count listings for now or try to parse
+    # To keep it simple and match the "50k+" vibe, let's count listings or sum if possible.
+    # Actually, the user's UI says "50k+ Meals Saved". If we only have 1-2 test items, it will look empty.
+    # Let's count total completed listings and maybe multiply by a factor or just show the raw count.
+    # For a real app, we'd sum the quantities.
+    completed_count = len([l for l in data['food_listings'] if l['status'] == 'completed'])
+    ngo_count = len(data['ngos'])
+    
+    return jsonify({
+        "meals_saved": completed_count,
+        "active_ngos": ngo_count
+    })
+
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=5000, allow_unsafe_werkzeug=True)
