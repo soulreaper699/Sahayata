@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sahayata | NGO Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="ambient-light secondary-glow" style="bottom: auto; top: -10%;"></div>
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img src="logo.png" alt="Logo" class="logo">
+            <span>Sahayata <span style="font-size:1rem; color:var(--secondary-color);">| NGO</span></span>
+        </div>
+        <div class="nav-links">
+            <span id="user-greeting" style="color: var(--text-main); font-weight: 600; margin-right: 15px;"></span>
+            <button class="btn btn-secondary" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div style="padding: 3rem 5%;">
+        <h2>Live Donations Feed</h2>
+        <p style="color: var(--text-muted)">Accept pending food donations in your area. You will receive contact info upon acceptance.</p>
+    </div>
+
+    <section class="dashboard" style="padding-top: 0;">
+        <div class="dashboard-grid" id="donations-container">
+            <div class="loader-container" id="loading-donations">
+                <div class="spinner"></div>
+                <p>Establishing live feed...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Claim Confirm Modal -->
+    <div id="claim-modal" class="modal">
+        <div class="modal-content glass-card">
+            <span class="close-btn" onclick="closeClaimModal()">&times;</span>
+            <h2 class="modal-title">Confirm Acceptance</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem;">By clicking confirm, you agree to coordinate the pickup of this food explicitly. The donor's contact details will be shared immediately.</p>
+            <form id="claim-form">
+                <button type="submit" class="btn btn-primary btn-block">Confirm & Get Contact Info</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

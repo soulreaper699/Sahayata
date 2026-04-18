@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sahayata | Bridging the Food Gap</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Animated Light Moving Background Elements -->
+    <div class="ambient-light moving-shape-1"></div>
+    <div class="ambient-light moving-shape-2"></div>
+    <div class="ambient-light moving-shape-3"></div>
+
+    <nav class="navbar" style="position: sticky; top:0; left:0; width:100%;">
+        <div class="nav-brand">
+            <span style="font-size: 1.6rem;">Sahayata</span>
+        </div>
+        <div class="nav-links" id="dynamic-nav">
+            <a href="login.html" class="btn btn-secondary" style="color:var(--text-main); font-weight:600; text-decoration: none;">Sign In</a>
+            <a href="register.html" class="btn btn-primary" style="color:white !important; text-decoration: none;">Get Started</a>
+        </div>
+    </nav>
+
+    <!-- SECTION 1: HERO -->
+    <header class="hero-split">
+        <div class="hero-left">
+            <div class="glass-badge">🌟 Revolutionizing Food Rescue</div>
+            <h1 class="hero-title" style="font-size: 4.5rem; color: var(--text-main); margin-bottom: 1.5rem; line-height: 1.1;">
+                Stop <span class="highlight-red">Waste.</span><br>
+                Distribute <span class="highlight">Hope.</span>
+            </h1>
+            <p class="hero-subtitle" style="font-size: 1.25rem; color: var(--text-muted); margin-bottom: 2.5rem; max-width: 90%;">
+                Sahayata is a dynamic network bridging the gap between generous food donors and verified NGOs. Target surplus inventory and execute collections seamlessly.
+            </p>
+            <div class="hero-actions">
+                <button class="btn btn-primary" onclick="window.location.href='register.html'" style="font-size: 1.1rem; padding: 1rem 2.5rem; color:white;">Join the Network</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior: 'smooth'})" style="font-size: 1.1rem; padding: 1rem 2.5rem; background:transparent;">How it Works</button>
+            </div>
+            
+            <div class="hero-stats" style="display:flex; gap: 2.5rem; margin-top: 3rem; align-items:center;">
+                <div>
+                    <h3 style="font-size: 2.2rem; color: var(--primary-color);">50k+</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; font-weight:600;">Meals Saved</p>
+                </div>
+                <div style="width: 1px; height: 50px; background: rgba(0,0,0,0.1);"></div>
+                <div>
+                    <h3 style="font-size: 2.2rem; color: var(--secondary-color);">120+</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; font-weight:600;">Active NGOs</p>
+                </div>
+            </div>
+        </div>
+        <div class="hero-right" style="position:relative;">
+            <div class="hero-image-container" style="animation: float 4s ease-in-out infinite;">
+                <img src="sahayata_hero.png" alt="Platform Interaction" style="width: 100%; max-width: 550px;">
+            </div>
+            
+            <!-- Floating Interactive Element -->
+            <div class="glass-card" style="position: absolute; top: 15%; right: -5%; padding: 0.8rem 1.5rem; border-radius: 50px; display:flex; align-items:center; gap:12px; animation: float 5s ease-in-out infinite alternate-reverse;">
+                <span style="font-size:1.6rem; background:rgba(229,107,79,0.1); border-radius:50%; padding: 10px;">📦</span>
+                <div>
+                    <p style="font-weight: 700; font-size:0.95rem; color:var(--text-main); margin:0;">20kg Bread Listed!</p>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin:0;">Live Feed Alert</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- SECTION 2: HOW IT WORKS -->
+    <section id="features" class="features-section" style="padding: 6rem 5%; background: rgba(255,255,255,0.3); backdrop-filter:blur(10px); border-top: 1px solid var(--card-border);">
+        <div style="text-align: center; margin-bottom: 4rem;">
+             <h2 style="font-size: 3rem; margin-bottom: 1rem;">Seamless <span class="highlight">Redistribution</span></h2>
+             <p style="color:var(--text-muted); max-width: 600px; margin: 0 auto; font-size: 1.15rem;">From logging surplus items to executing the pickup, our state-of-the-art engine gets meals securely to those who need them most.</p>
+        </div>
+        
+        <div class="features-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 3rem;">
+            <!-- Step 1 -->
+            <div class="feature-card glass-card" style="text-align:center; padding: 3rem 2rem;">
+                <div style="width: 70px; height: 70px; border-radius: 50%; background: rgba(229, 107, 79, 0.15); color: var(--primary-color); display:flex; align-items:center; justify-content:center; font-size: 2rem; margin: 0 auto 1.5rem; font-weight:800;">1</div>
+                <h3 style="margin-bottom: 1.5rem; font-size: 1.5rem;">Donors List Food</h3>
+                <p style="color:var(--text-muted); font-size: 1rem;">Restaurants, bakeries, or individuals easily log excess inventory specifying exact quantities and strict expiry deadlines.</p>
+            </div>
+            
+             <!-- Step 2 -->
+             <div class="feature-card glass-card" style="text-align:center; padding: 3rem 2rem;">
+                <div style="width: 70px; height: 70px; border-radius: 50%; background: rgba(74, 144, 226, 0.15); color: var(--secondary-color); display:flex; align-items:center; justify-content:center; font-size: 2rem; margin: 0 auto 1.5rem; font-weight:800;">2</div>
+                <h3 style="margin-bottom: 1.5rem; font-size: 1.5rem;">NGOs Claim Listings</h3>
+                <p style="color:var(--text-muted); font-size: 1rem;">Verified aid organizations browse a synchronized real-time WebSocket feed mapping all available food pending nearby.</p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="feature-card glass-card" style="text-align:center; padding: 3rem 2rem;">
+                <div style="width: 70px; height: 70px; border-radius: 50%; background: rgba(0, 210, 150, 0.15); color: #00d296; display:flex; align-items:center; justify-content:center; font-size: 2rem; margin: 0 auto 1.5rem; font-weight:800;">3</div>
+                <h3 style="margin-bottom: 1.5rem; font-size: 1.5rem;">Secure Handshake</h3>
+                <p style="color:var(--text-muted); font-size: 1rem;">Private details inherently unlock strictly upon mutual claiming, guaranteeing privacy and assuring rapid fulfillment.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer style="text-align: center; padding: 3rem 5%; border-top: 1px solid var(--card-border); background:rgba(0,0,0,0.02);">
+        <p style="color: var(--text-muted); font-size: 0.9rem;">&copy; 2026 Sahayata Platform. Designed for impact.</p>
+    </footer>
+    <script src="auth.js"></script>
+</body>
+</html>

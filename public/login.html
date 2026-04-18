@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sahayata | Sign In</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="auth-layout">
+        <!-- Interactive Graphic Side -->
+        <div class="auth-left">
+            <div class="auth-left-content">
+                <a href="/" style="text-decoration:none;">
+                    <h1 style="font-size: 3rem; margin-bottom: 1rem;">Sahayata</h1>
+                </a>
+                <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 400px; margin: 0 auto;">Welcome back. Access your custom dashboard to track and manage food redistributions securely.</p>
+            </div>
+        </div>
+
+        <!-- Functional Form Side -->
+        <div class="auth-right">
+            <div class="auth-header">
+                <h2>Welcome back</h2>
+                <p>Sign in to your account securely.</p>
+            </div>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label>User / Organization Name</label>
+                    <input type="text" id="name" required placeholder="Enter your registered name">
+                </div>
+                
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label>Password</label>
+                    <input type="password" id="password" required placeholder="Enter your password">
+                </div>
+                
+                <p id="error-msg" style="color: var(--accent-red); margin-bottom: 1rem; font-size: 0.9rem; display: none;"></p>
+                <button type="submit" class="btn btn-primary btn-block" style="padding: 1rem; font-size:1.1rem; margin-top:2rem;">Sign In</button>
+            </form>
+
+            <div style="text-align: center; margin-top: 2.5rem; font-size: 0.95rem; border-top: 1px solid #efeef1; padding-top: 1.5rem;">
+                <span style="color: var(--text-muted);">Don't have an account?</span> 
+                <a href="register.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600; margin-left: 5px;">Register Here</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+</body>
+</html>

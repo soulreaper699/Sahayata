@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sahayata | Donor Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="ambient-light main-glow"></div>
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img src="logo.png" alt="Logo" class="logo">
+            <span>Sahayata <span style="font-size:1rem; color:var(--primary-color);">| Donor</span></span>
+        </div>
+        <div class="nav-links">
+            <span id="user-greeting" style="color: var(--text-main); font-weight: 600; margin-right: 15px;"></span>
+            <button class="btn btn-secondary" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div style="padding: 3rem 5%; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2>Your active food listings</h2>
+            <p style="color: var(--text-muted)">Manage your available and completed food donations here.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openDonateModal()">+ Add Food Listing</button>
+    </div>
+
+    <section class="dashboard" style="padding-top: 0;">
+        <div class="dashboard-grid" id="donations-container">
+            <div class="loader-container" id="loading-donations">
+                <div class="spinner"></div>
+                <p>Loading your food listings...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Donation Modal -->
+    <div id="donate-modal" class="modal">
+        <div class="modal-content glass-card">
+            <span class="close-btn" onclick="closeDonateModal()">&times;</span>
+            <h2 class="modal-title">Log a New Food Listing</h2>
+            <form id="donation-form">
+                <div class="form-group">
+                    <label>Type of Food</label>
+                    <input type="text" id="foodType" placeholder="e.g. Fresh Produce, 30 Rice Bags" required>
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="text" id="quantity" placeholder="e.g. 50 kg" required>
+                </div>
+                <div class="form-group">
+                    <label>Expiry Time</label>
+                    <input type="datetime-local" id="expiryTime" required style="color-scheme: dark;">
+                </div>
+                <div class="form-group">
+                    <label>Pickup Location</label>
+                    <input type="text" id="location" placeholder="e.g. 45th Main Street Backdoor" required>
+                </div>
+                <div class="form-group" style="display:flex; align-items:center; gap: 10px; margin-top: 1rem; margin-bottom: 2rem;">
+                    <input type="checkbox" id="autoAccept" style="width: auto; padding: 0;">
+                    <label for="autoAccept" style="margin: 0; color: var(--text-main); font-weight: normal;">Auto-Accept first NGO claim request?</label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="submit-donation-btn">Post Listing</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sahayata | Register</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .conditional-field { display: none; }
+        .conditional-field.active { display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-layout">
+        <!-- Interactive Graphic Side -->
+        <div class="auth-left">
+            <div class="auth-left-content">
+                <a href="/" style="text-decoration:none;">
+                    <h1 style="font-size: 3rem; margin-bottom: 1rem;">Sahayata</h1>
+                </a>
+                <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 400px; margin: 0 auto;">Join the network distributing hope. Connect your surplus to verfied NGOs instantly.</p>
+            </div>
+        </div>
+
+        <!-- Functional Form Side -->
+        <div class="auth-right">
+            <div class="auth-header">
+                <h2>Create your account</h2>
+                <p>Build your unified donor or NGO profile below.</p>
+            </div>
+
+            <form id="register-form">
+                <div class="form-group">
+                    <label>I am a...</label>
+                    <select id="role" onchange="toggleFields()">
+                        <option value="donor">Food Donor (Restaurant, Individual)</option>
+                        <option value="ngo">Verified NGO (Accepts Food)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label id="name-label">Full Name</label>
+                    <input type="text" id="name" required placeholder="e.g. Fresh Farms Coop">
+                </div>
+                
+                <!-- Donor Fields -->
+                <div class="form-group conditional-field active" id="field-phone">
+                    <label>Phone Number <span style="font-weight:normal; color:#999">(Shared upon claim)</span></label>
+                    <input type="tel" id="phone" placeholder="e.g. +1 555-0100">
+                </div>
+                
+                <!-- NGO Fields -->
+                <div class="form-group conditional-field" id="field-capacity">
+                    <label>Estimated Capacity</label>
+                    <input type="text" id="capacity" placeholder="e.g. 500 meals/day">
+                </div>
+                <div class="form-group conditional-field" id="field-location">
+                    <label>NGO Location <span style="font-weight:normal; color:#999">(Shared upon claim)</span></label>
+                    <input type="text" id="location" placeholder="e.g. 123 Shelter Ave, Metro">
+                </div>
+                
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label>Password</label>
+                    <input type="password" id="password" required placeholder="Create a strong password">
+                </div>
+                
+                <p id="error-msg" style="color: var(--accent-red); margin-bottom: 1rem; font-size: 0.9rem; display: none;"></p>
+                <button type="submit" class="btn btn-primary btn-block" style="padding: 1rem; font-size:1.1rem; margin-top:2rem;">Complete Registration</button>
+            </form>
+
+            <div style="text-align: center; margin-top: 2.5rem; font-size: 0.95rem; border-top: 1px solid #efeef1; padding-top: 1.5rem;">
+                <span style="color: var(--text-muted);">Already have an account?</span> 
+                <a href="login.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600; margin-left: 5px;">Sign In</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleFields() {
+            const role = document.getElementById('role').value;
+            const lbl = document.getElementById('name-label');
+            
+            document.getElementById('field-phone').classList.remove('active');
+            document.getElementById('field-capacity').classList.remove('active');
+            document.getElementById('field-location').classList.remove('active');
+            
+            if (role === 'donor') {
+                lbl.innerText = "Full Name";
+                document.getElementById('field-phone').classList.add('active');
+            } else {
+                lbl.innerText = "Organization Name";
+                document.getElementById('field-capacity').classList.add('active');
+                document.getElementById('field-location').classList.add('active');
+            }
+        }
+    </script>
+    <script src="auth.js"></script>
+</body>
+</html>
