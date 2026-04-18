@@ -68,7 +68,8 @@ def register():
             "phone": content.get('phone'), 
             "password": content.get('password'),
             "lat": content.get('lat'),
-            "lng": content.get('lng')
+            "lng": content.get('lng'),
+            "joined_at": int(time.time())
         }
         data['donors'].append(new_user)
     elif role == 'ngo':
@@ -82,7 +83,8 @@ def register():
             "location": content.get('location'), 
             "password": content.get('password'),
             "lat": content.get('lat'),
-            "lng": content.get('lng')
+            "lng": content.get('lng'),
+            "joined_at": int(time.time())
         }
         data['ngos'].append(new_user)
     else:
@@ -276,6 +278,31 @@ def submit_rating():
     data['ratings'].append(new_rating)
     save_data(data)
     return jsonify({"success": True}), 201
+
+@app.route('/api/ratings/<to_user_id>', methods=['GET'])
+def get_user_ratings(to_user_id):
+    data = load_data()
+    user_ratings = [r for r in data['ratings'] if r['to_user_id'] == to_user_id]
+    
+    # Calculate average
+    avg = 0
+    if user_ratings:
+        avg = sum(r['rating'] for r in user_ratings) / len(user_ratings)
+    
+    # Get member since
+    joined_at = None
+    all_users = data['donors'] + data['ngos']
+    for u in all_users:
+        if u['id'] == to_user_id:
+            joined_at = u.get('joined_at')
+            break
+            
+    return jsonify({
+        "average": round(avg, 1),
+        "count": len(user_ratings),
+        "reviews": user_ratings,
+        "joined_at": joined_at
+    })
 
 @app.route('/api/ngo/requirements', methods=['GET', 'POST'])
 def ngo_requirements():

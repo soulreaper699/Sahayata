@@ -20,7 +20,7 @@
     <nav class="navbar">
         <div class="nav-brand">
             <img src="logo.png" alt="Logo" class="logo">
-            <span>Sahayata <span style="font-size:1rem; color:var(--secondary-color);">| NGO</span></span>
+            <span style="color: var(--secondary-color);">Sahayata | NGO</span>
         </div>
         <div class="nav-links">
             <div id="google_translate_element" style="margin-right: 15px;"></div>
@@ -29,32 +29,41 @@
         </div>
     </nav>
 
-    <div style="padding: 3rem 5%; display: flex; justify-content: space-between; align-items: center;">
-        <div>
-            <h2>Live Donations Feed</h2>
-            <p style="color: var(--text-muted)">Accept pending food donations in your area. You will receive contact info upon acceptance.</p>
+    <div class="dashboard">
+        <div class="dashboard-header" style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 2rem; border-bottom: 1px solid var(--card-border); padding-bottom: 2rem;">
+            <div>
+                <h1 style="font-size: 2.5rem;">NGO Dashboard</h1>
+                <div id="user-trust-stats" style="margin-top: 0.5rem; display:flex; gap:15px; align-items:center;">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            <button class="btn btn-secondary" onclick="openReqModal()" style="border-color: var(--secondary-color); color: var(--secondary-color);">+ Post Requirement</button>
         </div>
-        <button class="btn btn-secondary" onclick="openReqModal()" style="border-color: var(--secondary-color); color: var(--secondary-color);">+ Post Requirement</button>
-    </div>
 
-    <!-- NGO Own Requirements Section -->
-    <div style="padding: 0 5% 2rem;" id="ngo-own-req-section">
-        <div class="glass-card" style="padding: 1.5rem; background: rgba(74, 144, 226, 0.05);">
-            <h3 style="font-size: 1rem; margin-bottom: 1rem;">Your Active Requirements</h3>
-            <div id="my-requirements-list" style="display: flex; gap: 10px; overflow-x: auto;">
-                <p style="font-size: 0.8rem; color: var(--text-muted);">No requirements posted yet.</p>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 3rem;">
+            <div>
+                <h2 style="margin-bottom: 1.5rem;">Live Donations Feed</h2>
+                <div class="dashboard-grid" id="donations-container">
+                    <div class="loader-container" id="loading-donations">
+                        <div class="spinner"></div>
+                        <p>Establishing live feed...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h2 style="margin-bottom: 1.5rem;">Community Feedback</h2>
+                <div id="reviews-container" class="glass-card" style="max-height: 500px; overflow-y: auto;">
+                    <p style="color:var(--text-muted); text-align:center;">No reviews yet.</p>
+                </div>
+
+                <h2 style="margin-bottom: 1.5rem; margin-top: 3rem;">Your Active Requirements</h2>
+                <div id="my-requirements-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto;">
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">No requirements posted yet.</p>
+                </div>
             </div>
         </div>
     </div>
-
-    <section class="dashboard" style="padding-top: 0;">
-        <div class="dashboard-grid" id="donations-container">
-            <div class="loader-container" id="loading-donations">
-                <div class="spinner"></div>
-                <p>Establishing live feed...</p>
-            </div>
-        </div>
-    </section>
 
     <!-- NGO Requirement Modal -->
     <div id="req-modal" class="modal">

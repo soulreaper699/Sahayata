@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     fetchListings();
     fetchRequirements();
+    fetchTrustStats();
     setupStars();
 });
 
@@ -61,6 +62,17 @@ async function fetchRequirements() {
         renderRequirements(reqs);
     } catch (err) {
         console.error('Failed to fetch requirements', err);
+    }
+}
+
+async function fetchTrustStats() {
+    try {
+        const response = await fetch(`/api/ratings/${currentUser.id}`);
+        const data = await response.json();
+        renderTrustHeader(data);
+        renderReviewsList(data.reviews);
+    } catch (err) {
+        console.error('Failed to fetch trust stats', err);
     }
 }
 
@@ -387,4 +399,44 @@ if (clForm) {
         });
         closeClaimModal();
     });
+}
+
+function renderTrustHeader(data) {
+    const container = document.getElementById('user-trust-stats');
+    if (!container) return;
+    
+    const joined = data.joined_at ? new Date(data.joined_at * 1000) : new Date();
+    const joinedStr = joined.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    
+    container.innerHTML = `
+        <div class="trust-badge">
+            <span>🛡️ Serving Since ${joinedStr}</span>
+        </div>
+        <div class="star-rating">
+            ${Array.from({length: 5}, (_, i) => `<span class="star ${i < Math.floor(data.average) ? '' : 'empty'}">★</span>`).join('')}
+            <span style="color:var(--text-main); font-size: 0.9rem; margin-left: 5px;">(${data.average || 0})</span>
+        </div>
+    `;
+}
+
+function renderReviewsList(reviews) {
+    const container = document.getElementById('reviews-container');
+    if (!container) return;
+    
+    if (!reviews || reviews.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding: 2rem;">No feedback received yet. Complete donations to build your reputation!</p>';
+        return;
+    }
+    
+    container.innerHTML = reviews.map(r => `
+        <div class="review-card">
+            <div class="star-rating" style="font-size: 0.8rem; margin-bottom: 5px;">
+                ${Array.from({length: 5}, (_, i) => `<span class="star ${i < r.rating ? '' : 'empty'}">★</span>`).join('')}
+            </div>
+            <p style="font-size: 0.9rem; margin:0;">"${r.comment || 'No comment provided.'}"</p>
+            <div class="review-meta">
+                <span>By Anonymous</span>
+            </div>
+        </div>
+    `).join('');
 }

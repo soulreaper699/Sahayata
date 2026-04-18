@@ -1,13 +1,14 @@
 :root {
-    --bg-color: #eee8e1;
-    --card-bg: rgba(255, 255, 255, 0.5);
+    --bg-color: #e9f5db; /* Mint Background */
+    --card-bg: rgba(255, 255, 255, 0.7);
     --card-border: rgba(255, 255, 255, 0.8);
-    --primary-color: #e56b4f;
-    --primary-glow: rgba(229, 107, 79, 0.4);
-    --secondary-color: #4a90e2;
+    --primary-color: #1b4332; /* Forest Green */
+    --primary-glow: rgba(27, 67, 50, 0.2);
+    --secondary-color: #74c69d; /* Leaf Green */
     --accent-red: #d94848;
-    --text-main: #2b2b2b;
-    --text-muted: #5e5e5e;
+    --accent-orange: #f9844a; /* Logo Orange */
+    --text-main: #1a1a1a;
+    --text-muted: #4a4a4a;
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Inter', sans-serif;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -581,11 +582,45 @@ h1, h2, h3 { font-family: var(--font-heading); font-weight: 600; color: var(--te
 .diet-veg::before { content: '●'; font-size: 1.2rem; line-height: 0; }
 .diet-nonveg::before { content: '●'; font-size: 1.2rem; line-height: 0; }
 
+/* Trust & Reputation Components */
+.trust-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-color);
+    padding: 0.4rem 1rem;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    border: 1px solid var(--secondary-color);
+}
+
+.review-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 0.8rem;
+    border: 1px solid #efeef1;
+}
+.review-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+}
+
+.btn-orange {
+    background: var(--accent-orange);
+    color: white !important;
+}
+
 /* Ratings Stars */
 .star-rating {
     display: flex;
     gap: 2px;
-    color: #ffc107;
+    color: var(--accent-orange);
     font-size: 1rem;
 }
 .star-rating.large { font-size: 1.5rem; }
