@@ -12,26 +12,27 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 DATA_FILE = 'data.json'
 
 def load_data():
-    if not os.path.exists(DATA_FILE):
-        return {"donors": [], "ngos": [], "food_listings": [], "requests": []}
-    with open(DATA_FILE, 'r') as f:
-        try:
-            d = json.load(f)
-            # Ensure all keys exist
-            for key in ["donors", "ngos", "food_listings", "requests", "admins"]:
-                if key not in d: d[key] = []
-            
-            # Programmatically ensure the master admin exists (for production safety)
-            if not any(a['name'] == 'admin@123' for a in d['admins']):
-                d['admins'].append({
-                    "id": "admin-1",
-                    "name": "admin@123",
-                    "password": "fusionhacks"
-                })
-                # We don't save here to avoid file write loops, but it will be available in memory
-            return d
-        except json.JSONDecodeError:
-            return {"donors": [], "ngos": [], "food_listings": [], "requests": [], "admins": []}
+    d = {"donors": [], "ngos": [], "food_listings": [], "requests": [], "admins": []}
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, 'r') as f:
+            try:
+                loaded = json.load(f)
+                d.update(loaded)
+            except json.JSONDecodeError:
+                pass
+
+    # Ensure all keys exist
+    for key in ["donors", "ngos", "food_listings", "requests", "admins"]:
+        if key not in d: d[key] = []
+    
+    # Programmatically ensure the master admin exists (for production safety)
+    if not any(a['name'] == 'admin@123' for a in d['admins']):
+        d['admins'].append({
+            "id": "admin-1",
+            "name": "admin@123",
+            "password": "fusionhacks"
+        })
+    return d
 
 def save_data(data):
     with open(DATA_FILE, 'w') as f:
