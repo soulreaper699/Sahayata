@@ -46,7 +46,8 @@
                     <label>I am a...</label>
                     <select id="role" onchange="toggleFields()">
                         <option value="donor">Food Donor (Restaurant, Individual)</option>
-                        <option value="ngo">Verified NGO (Accepts Food)</option>
+                        <option value="ngo">Verified NGO (Accepts Edible Food)</option>
+                        <option value="farmer">Farmer / Composter (Accepts Unfit Food)</option>
                     </select>
                 </div>
 
@@ -107,6 +108,10 @@
             if (role === 'donor') {
                 lbl.innerText = "Full Name";
                 document.getElementById('field-phone').classList.add('active');
+            } else if (role === 'farmer') {
+                lbl.innerText = "Farm / Business Name";
+                document.getElementById('field-capacity').classList.add('active');
+                document.getElementById('field-location').classList.add('active');
             } else {
                 lbl.innerText = "Organization Name";
                 document.getElementById('field-capacity').classList.add('active');

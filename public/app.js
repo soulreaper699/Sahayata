@@ -317,7 +317,8 @@ if (dnForm) {
             expiry_time: document.getElementById('expiryTime').value,
             location: document.getElementById('location').value,
             image_url: imageUrl,
-            auto_accept: document.getElementById('autoAccept')?.checked || false
+            auto_accept: document.getElementById('autoAccept')?.checked || false,
+            is_compost: document.getElementById('isCompost')?.checked || false
         };
 
         await fetch('/api/listings', {
@@ -411,6 +412,9 @@ function renderTrustHeader(data) {
     container.innerHTML = `
         <div class="trust-badge">
             <span>🛡️ Serving Since ${joinedStr}</span>
+        </div>
+        <div class="trust-badge" style="border-color: var(--secondary-color); color: var(--secondary-color);">
+            <span>🌿 ${data.impact_score || 0} kg CO2 Saved</span>
         </div>
         <div class="star-rating">
             ${Array.from({length: 5}, (_, i) => `<span class="star ${i < Math.floor(data.average) ? '' : 'empty'}">★</span>`).join('')}
