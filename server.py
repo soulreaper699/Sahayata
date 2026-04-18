@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()
+
 import os
 import uuid
 from flask import Flask, request, jsonify, send_from_directory
@@ -7,13 +10,13 @@ from pymongo import MongoClient
 
 app = Flask(__name__, static_folder='public', static_url_path='')
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 # --- DATABASE CONNECTION ---
 MONGO_URI = os.environ.get('MONGO_URI', 'mongodb+srv://chiragnegi14_db_user:1486chirag@cluster0.m5fw1q6.mongodb.net/?appName=Cluster0')
 
-# Initialize once at startup — avoids eventlet/ssl recursion bug
-_client = MongoClient(MONGO_URI, tls=True, tlsAllowInvalidCertificates=True)
+# Initialize once at startup. Monkey-patch runs first so SSL is already patched.
+_client = MongoClient(MONGO_URI)
 db = _client['sahayata']
 
 # Ensure the master admin always exists (idempotent)
