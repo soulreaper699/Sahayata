@@ -20,6 +20,15 @@ def load_data():
             # Ensure all keys exist
             for key in ["donors", "ngos", "food_listings", "requests", "admins"]:
                 if key not in d: d[key] = []
+            
+            # Programmatically ensure the master admin exists (for production safety)
+            if not any(a['name'] == 'admin@123' for a in d['admins']):
+                d['admins'].append({
+                    "id": "admin-1",
+                    "name": "admin@123",
+                    "password": "fusionhacks"
+                })
+                # We don't save here to avoid file write loops, but it will be available in memory
             return d
         except json.JSONDecodeError:
             return {"donors": [], "ngos": [], "food_listings": [], "requests": [], "admins": []}
