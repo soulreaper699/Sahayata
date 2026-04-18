@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const loginForm = document.getElementById('login-form');
-    // Note: login.html needs to use 'name' instead of 'email' now 
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -37,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
             errorMsg.style.display = 'none';
 
             try {
-                // we changed login to use name/password per spec
                 const ident = document.getElementById('email') ? document.getElementById('email').value : document.getElementById('name').value;
                 const res = await fetch('/api/login', {
                     method: 'POST',
@@ -51,7 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (res.ok) {
                     const user = await res.json();
                     localStorage.setItem('sustaina_user_v3', JSON.stringify(user));
-                    window.location.href = user.role === 'donor' ? 'donor.html' : 'ngo.html';
+                    if (user.role === 'admin') window.location.href = 'admin.html';
+                    else window.location.href = user.role === 'donor' ? 'donor.html' : 'ngo.html';
                 } else {
                     const data = await res.json();
                     errorMsg.textContent = data.error || 'Login failed';
@@ -123,7 +122,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const mealsEl = document.getElementById('meals-saved-count');
                 const ngosEl = document.getElementById('active-ngos-count');
                 if (mealsEl) {
-                    // We sum the database count with the baseline 50,000 to keep it looking impressive
                     const totalMeals = 50000 + data.meals_saved;
                     mealsEl.textContent = totalMeals.toLocaleString() + '+';
                 }
