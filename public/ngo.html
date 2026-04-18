@@ -23,6 +23,7 @@
             <span>Sahayata <span style="font-size:1rem; color:var(--secondary-color);">| NGO</span></span>
         </div>
         <div class="nav-links">
+            <div id="google_translate_element" style="margin-right: 15px;"></div>
             <span id="user-greeting" style="color: var(--text-main); font-weight: 600; margin-right: 15px;"></span>
             <button class="btn btn-secondary" onclick="logout()">Logout</button>
         </div>
@@ -159,5 +160,15 @@
     </footer>
     <script src="auth.js"></script>
     <script src="app.js"></script>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'en,hi,ta,te',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
