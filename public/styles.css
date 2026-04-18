@@ -69,9 +69,10 @@ h1, h2, h3 { font-family: var(--font-heading); font-weight: 600; color: var(--te
 .secondary-glow { display: none; }
 
 @keyframes moveShapes {
-    0% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(15%, 10%) scale(1.1); }
-    100% { transform: translate(-10%, 20%) scale(0.9); }
+    0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+    33% { transform: translate(10%, 15%) rotate(120deg) scale(1.1); }
+    66% { transform: translate(-15%, 10%) rotate(240deg) scale(0.9); }
+    100% { transform: translate(0, 0) rotate(360deg) scale(1); }
 }
 
 @keyframes float {
