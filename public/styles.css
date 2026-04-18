@@ -562,3 +562,74 @@ h1, h2, h3 { font-family: var(--font-heading); font-weight: 600; color: var(--te
         justify-content: center;
     }
 }
+
+/* --- Advanced Features Styles --- */
+
+/* Diet Badge */
+.diet-badge {
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.diet-veg { background: rgba(0, 128, 0, 0.1); color: green; }
+.diet-nonveg { background: rgba(255, 0, 0, 0.1); color: darkred; }
+.diet-veg::before { content: '●'; font-size: 1.2rem; line-height: 0; }
+.diet-nonveg::before { content: '●'; font-size: 1.2rem; line-height: 0; }
+
+/* Ratings Stars */
+.star-rating {
+    display: flex;
+    gap: 2px;
+    color: #ffc107;
+    font-size: 1rem;
+}
+.star-rating.large { font-size: 1.5rem; }
+.star-rating .star.empty { color: #e4e5e9; }
+
+/* Requirement Card */
+.req-card {
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: var(--transition);
+}
+.req-card:hover { transform: scale(1.02); background: white; }
+.urgency-high { border-left: 4px solid var(--accent-red); }
+.urgency-normal { border-left: 4px solid var(--secondary-color); }
+
+/* Map Container */
+.map-container {
+    height: 300px;
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    margin: 1rem 0;
+    z-index: 1;
+}
+.mini-map { height: 150px; margin-top: 10px; }
+
+/* Category Tag */
+.category-tag {
+    background: rgba(0,0,0,0.05);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+/* Image Preview */
+.food-image-preview {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    background: #f0ede9;
+}

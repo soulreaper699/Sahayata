@@ -4,15 +4,26 @@ import uuid
 from flask import Flask, request, jsonify, send_from_directory
 from flask_socketio import SocketIO
 from flask_cors import CORS
+from werkzeug.utils import secure_filename
+import time
 
 app = Flask(__name__, static_folder='public', static_url_path='')
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+UPLOAD_FOLDER = 'public/uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 DATA_FILE = 'data.json'
 
 def load_data():
-    d = {"donors": [], "ngos": [], "food_listings": [], "requests": [], "admins": []}
+    d = {"donors": [], "ngos": [], "food_listings": [], "requests": [], "admins": [], "ratings": [], "ngo_requirements": []}
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'r') as f:
             try:
@@ -20,7 +31,7 @@ def load_data():
                 d.update(loaded)
             except json.JSONDecodeError:
                 pass
-    for key in ["donors", "ngos", "food_listings", "requests", "admins"]:
+    for key in ["donors", "ngos", "food_listings", "requests", "admins", "ratings", "ngo_requirements"]:
         if key not in d: d[key] = []
     if not any(a['name'] == 'admin@123' for a in d['admins']):
         d['admins'].append({"id": "admin-1", "name": "admin@123", "password": "fusionhacks"})
@@ -51,13 +62,28 @@ def register():
         for u in data['donors']:
             if u['name'] == content.get('name'):
                 return jsonify({"error": "User Name exists"}), 400
-        new_user = {"id": str(uuid.uuid4()), "name": content.get('name'), "phone": content.get('phone'), "password": content.get('password')}
+        new_user = {
+            "id": str(uuid.uuid4()), 
+            "name": content.get('name'), 
+            "phone": content.get('phone'), 
+            "password": content.get('password'),
+            "lat": content.get('lat'),
+            "lng": content.get('lng')
+        }
         data['donors'].append(new_user)
     elif role == 'ngo':
         for u in data['ngos']:
             if u['name'] == content.get('name'):
                 return jsonify({"error": "NGO Name exists"}), 400
-        new_user = {"id": str(uuid.uuid4()), "name": content.get('name'), "capacity": content.get('capacity'), "location": content.get('location'), "password": content.get('password')}
+        new_user = {
+            "id": str(uuid.uuid4()), 
+            "name": content.get('name'), 
+            "capacity": content.get('capacity'), 
+            "location": content.get('location'), 
+            "password": content.get('password'),
+            "lat": content.get('lat'),
+            "lng": content.get('lng')
+        }
         data['ngos'].append(new_user)
     else:
         return jsonify({"error": "Invalid role"}), 400
@@ -147,11 +173,15 @@ def get_listings():
 @app.route('/api/listings', methods=['POST'])
 def add_listing():
     content = request.json
+    new_id = str(uuid.uuid4())
     new_listing = {
-        "id": str(uuid.uuid4()), "donor_id": content.get("donor_id"),
+        "id": new_id, "donor_id": content.get("donor_id"),
         "food_type": content.get("food_type"), "quantity": content.get("quantity"),
         "expiry_time": content.get("expiry_time"), "location": content.get("location"),
-        "auto_accept": content.get("auto_accept", False), "status": "available"
+        "auto_accept": content.get("auto_accept", False), "status": "available",
+        "diet_type": content.get("diet_type", "veg"),
+        "category": content.get("category", "Cooked Meals"),
+        "image_url": content.get("image_url")
     }
     data = load_data()
     data['food_listings'].insert(0, new_listing)
@@ -215,6 +245,65 @@ def get_stats():
     completed_count = len([l for l in data['food_listings'] if l['status'] == 'completed'])
     ngo_count = len(data['ngos'])
     return jsonify({"meals_saved": completed_count, "active_ngos": ngo_count})
+
+# --- ADVANCED FEATURES: Uploads, Ratings, Requirements ---
+
+@app.route('/api/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+    if file and allowed_file(file.filename):
+        filename = secure_filename(f"{int(time.time())}_{file.filename}")
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return jsonify({"image_url": f"uploads/{filename}"}), 201
+    return jsonify({"error": "File type not allowed"}), 400
+
+@app.route('/api/ratings', methods=['POST'])
+def submit_rating():
+    content = request.json
+    data = load_data()
+    new_rating = {
+        "id": str(uuid.uuid4()),
+        "from_user_id": content.get("from_user_id"),
+        "to_user_id": content.get("to_user_id"),
+        "listing_id": content.get("listing_id"),
+        "rating": content.get("rating"),
+        "comment": content.get("comment", "")
+    }
+    data['ratings'].append(new_rating)
+    save_data(data)
+    return jsonify({"success": True}), 201
+
+@app.route('/api/ngo/requirements', methods=['GET', 'POST'])
+def ngo_requirements():
+    data = load_data()
+    if request.method == 'POST':
+        content = request.json
+        new_req = {
+            "id": str(uuid.uuid4()),
+            "ngo_id": content.get("ngo_id"),
+            "ngo_name": content.get("ngo_name"),
+            "title": content.get("title"),
+            "quantity": content.get("quantity"),
+            "urgency": content.get("urgency", "Normal"),
+            "timestamp": int(time.time())
+        }
+        data['ngo_requirements'].insert(0, new_req)
+        save_data(data)
+        socketio.emit('requirement_updated')
+        return jsonify(new_req), 201
+    else:
+        return jsonify(data['ngo_requirements'])
+
+@app.route('/api/ngo/requirements/<req_id>', methods=['DELETE'])
+def delete_ngo_requirement(req_id):
+    data = load_data()
+    data['ngo_requirements'] = [r for r in data['ngo_requirements'] if r['id'] != req_id]
+    save_data(data)
+    return jsonify({"success": True}), 200
 
 # --- ADMIN ENDPOINTS ---
 @app.route('/api/admin/overview', methods=['GET'])

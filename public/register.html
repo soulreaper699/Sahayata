@@ -6,9 +6,12 @@
     <title>Sahayata | Register</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         .conditional-field { display: none; }
         .conditional-field.active { display: block; }
+        #reg-map { height: 250px; width: 100%; border-radius: 12px; margin-bottom: 1rem; border: 1px solid rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -64,6 +67,14 @@
                     <label>NGO Location <span style="font-weight:normal; color:#999">(Shared upon claim)</span></label>
                     <input type="text" id="location" placeholder="e.g. 123 Shelter Ave, Metro">
                 </div>
+
+                <div class="form-group">
+                    <label>Pin your Location on Map</label>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Click/Tap on the map to set your exact location for NGOs/Donors to find you.</p>
+                    <div id="reg-map"></div>
+                    <input type="hidden" id="lat">
+                    <input type="hidden" id="lng">
+                </div>
                 
                 <div class="form-group" style="margin-top: 1.5rem;">
                     <label>Password</label>
@@ -99,6 +110,24 @@
                 document.getElementById('field-location').classList.add('active');
             }
         }
+
+        // --- MAP LOGIC ---
+        let map = L.map('reg-map').setView([28.6139, 77.2090], 11); // Default to New Delhi
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        let marker;
+        map.on('click', function(e) {
+            if (marker) map.removeLayer(marker);
+            marker = L.marker(e.latlng).addTo(map);
+            document.getElementById('lat').value = e.latlng.lat;
+            document.getElementById('lng').value = e.latlng.lng;
+        });
+
+        // Initialize for first view
+        toggleFields();
+        setTimeout(() => map.invalidateSize(), 500);
     </script>
     <script src="auth.js"></script>
 </body>

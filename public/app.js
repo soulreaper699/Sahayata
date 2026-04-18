@@ -1,25 +1,32 @@
 const socket = io();
 
+// Constants
 const donationsContainer = document.getElementById('donations-container');
 const loadingDonations = document.getElementById('loading-donations');
 const donateModal = document.getElementById('donate-modal');
 const claimModal = document.getElementById('claim-modal');
+const reqModal = document.getElementById('req-modal');
+const ratingModal = document.getElementById('rating-modal');
 
 let listingsData = [];
 let claimTargetId = null;
+let ratingTargetListingId = null;
+let ratingTargetUserId = null;
 
-// Ensure auth securely
+// User Auth
 const userJson = localStorage.getItem('sustaina_user_v3');
 if (!userJson) {
     window.location.href = 'login.html';
 }
-
 const currentUser = JSON.parse(userJson);
 
 document.addEventListener('DOMContentLoaded', () => {
     const greeting = document.getElementById('user-greeting');
     if (greeting) greeting.textContent = `Hello, ${currentUser.name}`;
+    
     fetchListings();
+    fetchRequirements();
+    setupStars();
 });
 
 // Socket Events
@@ -30,12 +37,11 @@ socket.on('new_listing', (listing) => {
     }
 });
 
-socket.on('listing_updated', () => {
-    // For simplicity, just refetch since multiple relations might have changed
-    fetchListings();
-});
+socket.on('listing_updated', () => fetchListings());
+socket.on('requirement_updated', () => fetchRequirements());
 
-// API Calls
+// --- API CALLS ---
+
 async function fetchListings() {
     try {
         const url = `/api/listings?user_id=${currentUser.id}&role=${currentUser.role}`;
@@ -48,33 +54,23 @@ async function fetchListings() {
     }
 }
 
-// Global Actions
-async function markDone(listingId) {
+async function fetchRequirements() {
     try {
-        await fetch(`/api/listings/${listingId}/complete`, { method: 'POST' });
-    } catch (e) {
-        console.error(e);
+        const response = await fetch('/api/ngo/requirements');
+        const reqs = await response.json();
+        renderRequirements(reqs);
+    } catch (err) {
+        console.error('Failed to fetch requirements', err);
     }
 }
 
-async function approveRequest(listingId, requestId) {
-    try {
-        await fetch(`/api/listings/${listingId}/approve`, { 
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ request_id: requestId })
-        });
-    } catch (e) {
-        console.error(e);
-    }
-}
+// --- RENDERING LOGIC ---
 
-// Rendering Logic
 function renderListings() {
     if (!donationsContainer) return;
     
     if (listingsData.length === 0) {
-        donationsContainer.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color: var(--text-muted)">
+        donationsContainer.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color: var(--text-muted); padding: 3rem;">
             ${currentUser.role === 'donor' ? 'You have no active food listings.' : 'No available food listings in your area yet.'}
         </p>`;
         return;
@@ -82,7 +78,6 @@ function renderListings() {
 
     donationsContainer.innerHTML = '';
     
-    // Primary Sort: available first, claimed second, completed last
     let sorted = [...listingsData].sort((a,b) => {
         const order = { "available": 1, "claimed": 2, "completed": 3 };
         return order[a.status] - order[b.status];
@@ -95,194 +90,298 @@ function renderListings() {
         
         const card = document.createElement('div');
         card.className = 'glass-card donation-card';
-        if (isDone) card.style.opacity = '0.6';
+        if (isDone) card.style.opacity = '0.7';
 
-        let badgeClass = 'status-claimed'; // completed
+        let badgeClass = 'status-claimed';
         if (isPending) badgeClass = 'status-available';
-        if (isAccepted) badgeClass = 'status-accepted'; 
+        if (isAccepted) badgeClass = 'status-accepted';
 
-        const badgeStyle = isAccepted ? 'background: rgba(0, 210, 255, 0.15); color: var(--secondary-color);' : '';
-
-        // Expiry formatting
         let expiryParsed = 'N/A';
         if (item.expiry_time) {
              const d = new Date(item.expiry_time);
              expiryParsed = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         }
 
-        let innerHTML = `
+        const dietClass = item.diet_type === 'veg' ? 'diet-veg' : 'diet-nonveg';
+        const dietLabel = item.diet_type === 'veg' ? 'VEG' : 'NON-VEG';
+
+        innerHTML = `
             <div class="card-header">
-                <span class="status-badge ${badgeClass}" style="${badgeStyle}">
+                <span class="status-badge ${badgeClass}">
                     ${item.status.toUpperCase()}
                 </span>
                 <span style="font-size: 0.8rem; color: var(--text-muted);">Exp: ${expiryParsed}</span>
             </div>
             <div class="card-body" style="margin-top: 10px;">
-                <h3>${item.food_type}</h3>
-                <p style="margin-bottom: 2px;"><span>Quantity:</span> <span style="color:var(--text-main); font-weight: 600">${item.quantity}</span></p>
-                <div class="donor-info">From: ${item.donor_name} <br> Loc: ${item.location}</div>
+                ${item.image_url ? `<img src="${item.image_url}" class="food-image-preview">` : ''}
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 0.5rem;">
+                    <h3 style="margin:0;">${item.food_type}</h3>
+                    <span class="diet-badge ${dietClass}">${dietLabel}</span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <span class="category-tag">${item.category || 'General'}</span>
+                </div>
+                <p style="margin-bottom: 6px;"><span>Quantity:</span> <span style="color:var(--text-main); font-weight: 600">${item.quantity}</span></p>
+                <div class="donor-info">
+                    <strong>${item.donor_name}</strong><br>
+                    📍 ${item.location}
+                </div>
             </div>
         `;
 
-        // If Donor sees Accepted -> Show NGO Info
+        const actionArea = document.createElement('div');
+        actionArea.style.marginTop = '15px';
+
         if (isAccepted && currentUser.role === 'donor') {
             innerHTML += `
                 <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dotted var(--card-border);">
-                    <p style="color:var(--primary-color); font-size:0.85rem; margin-bottom:5px;"><b>Requested & Claimed by: ${item.ngo_name}</b></p>
+                    <p style="color:var(--primary-color); font-size:0.85rem; margin-bottom:5px;"><b>Claimed by: ${item.ngo_name}</b></p>
                     <p style="font-size:0.8rem; line-height: 1.4;">
-                    Capacity: <span style="color:var(--text-main); font-weight: 500">${item.ngo_contact?.capacity || 'N/A'}</span><br>
-                    Location: <span style="color:var(--text-main); font-weight: 500">${item.ngo_contact?.location || 'N/A'}</span>
+                        Loc: ${item.ngo_contact?.location || 'N/A'}
                     </p>
                 </div>
             `;
-            const markDoneBtn = document.createElement('button');
-            markDoneBtn.className = 'btn btn-secondary btn-block';
-            markDoneBtn.textContent = 'Mark Completed';
-            markDoneBtn.style.marginTop = '15px';
-            markDoneBtn.onclick = () => markDone(item.id);
-            card.innerHTML = innerHTML;
-            card.appendChild(markDoneBtn);
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-secondary btn-block';
+            btn.textContent = 'Mark Completed';
+            btn.onclick = () => markDone(item.id);
+            actionArea.appendChild(btn);
         } 
-        // If Donor sees Available and has pending requests -> Show Queue
-        else if (isPending && currentUser.role === 'donor' && item.pending_requests && item.pending_requests.length > 0) {
-            innerHTML += `
-                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dotted var(--card-border);">
-                    <p style="color:var(--primary-color); font-size:0.85rem; margin-bottom:10px;"><b>Pending Requests (${item.pending_requests.length})</b></p>
-            `;
-            let queueHTML = '</div><div style="display:flex; flex-direction:column; gap:8px;">';
-            
-            card.innerHTML = innerHTML + queueHTML;
-            
+        else if (isPending && currentUser.role === 'donor' && item.pending_requests?.length > 0) {
+            innerHTML += `<div style="margin-top:15px; border-top:1px dotted #ccc; padding-top:10px;"><p style="font-size:0.8rem; color:var(--primary-color); font-weight:700;">Pending Approvals (${item.pending_requests.length})</p></div>`;
             item.pending_requests.forEach(req => {
-                const reqDiv = document.createElement('div');
-                reqDiv.style.cssText = "background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px; font-size: 0.8rem; display:flex; justify-content:space-between; align-items:center;";
-                
-                reqDiv.innerHTML = `
-                    <div>
-                        <strong style="color:var(--text-main);">${req.name}</strong><br>
-                        Cap: ${req.capacity}
-                    </div>
-                `;
-                
-                const appBtn = document.createElement('button');
-                appBtn.style.cssText = "background: var(--primary-color); color: white; border:none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight:600;";
-                appBtn.textContent = 'Approve';
-                appBtn.onclick = () => approveRequest(item.id, req.request_id);
-                
-                reqDiv.appendChild(appBtn);
-                card.appendChild(reqDiv);
+                const rdiv = document.createElement('div');
+                rdiv.style.cssText = "background:rgba(0,0,0,0.02); padding:8px; border-radius:8px; margin-top:8px; display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;";
+                rdiv.innerHTML = `<span>${req.name}</span> <button class="btn btn-primary" style="padding:4px 8px; font-size:0.7rem;" onclick="approveRequest('${item.id}', '${req.request_id}')">Approve</button>`;
+                actionArea.appendChild(rdiv);
             });
         }
-        // If NGO sees Accepted -> Show Donor Info
         else if (isAccepted && currentUser.role === 'ngo') {
              innerHTML += `
                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dotted var(--card-border);">
-                    <p style="color:var(--primary-color); font-size:0.85rem; margin-bottom:5px;"><b>Donor Contact Details</b></p>
-                    <p style="font-size:0.8rem; line-height: 1.4;">
-                    Phone: <span style="color:var(--text-main); font-weight: 500">${item.donor_contact?.phone || 'N/A'}</span>
-                    </p>
+                    <p style="color:var(--primary-color); font-size:0.85rem; margin-bottom:5px;"><b>Donor: ${item.donor_contact?.phone || 'Contact Private'}</b></p>
                 </div>
             `;
-            const markDoneBtn = document.createElement('button');
-            markDoneBtn.className = 'btn btn-secondary btn-block';
-            markDoneBtn.textContent = 'Mark Completed';
-            markDoneBtn.style.marginTop = '15px';
-            markDoneBtn.onclick = () => markDone(item.id);
-            card.innerHTML = innerHTML;
-            card.appendChild(markDoneBtn);
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-secondary btn-block';
+            btn.textContent = 'Mark Completed';
+            btn.onclick = () => markDone(item.id);
+            actionArea.appendChild(btn);
         }
         else if (isPending && currentUser.role === 'ngo') {
-            if (item.ngo_has_pending) {
-                const waitBadge = document.createElement('div');
-                waitBadge.style.cssText = "background: rgba(0,0,0,0.05); color: var(--text-muted); text-align:center; padding: 10px; border-radius: 8px; margin-top: 15px; font-size: 0.9rem; font-weight: 600;";
-                waitBadge.textContent = '🤞 Pending Donor Approval...';
-                card.innerHTML = innerHTML;
-                card.appendChild(waitBadge);
-            } else {
-                const claimBtn = document.createElement('button');
-                claimBtn.className = 'btn btn-primary btn-block';
-                claimBtn.textContent = 'Send Request / Claim';
-                claimBtn.style.marginTop = '15px';
-                claimBtn.onclick = () => openClaimModal(item.id);
-                card.innerHTML = innerHTML;
-                card.appendChild(claimBtn);
-            }
+            const btn = document.createElement('button');
+            btn.className = item.ngo_has_pending ? 'btn btn-secondary btn-block' : 'btn btn-primary btn-block';
+            btn.disabled = item.ngo_has_pending;
+            btn.textContent = item.ngo_has_pending ? 'Request Pending...' : 'Request Food';
+            btn.onclick = () => openClaimModal(item.id);
+            actionArea.appendChild(btn);
         }
-        else {
-             card.innerHTML = innerHTML;
+        else if (isDone) {
+            const rateBtn = document.createElement('button');
+            rateBtn.className = 'btn btn-secondary btn-block';
+            rateBtn.textContent = 'Rate Experience';
+            rateBtn.onclick = () => openRatingModal(item.id, currentUser.role === 'donor' ? item.claimed_by_ngo_id : item.donor_id);
+            actionArea.appendChild(rateBtn);
         }
 
+        // Map Button
+        if (item.lat && item.lng) {
+            const mapBtn = document.createElement('button');
+            mapBtn.className = 'btn btn-secondary btn-block';
+            mapBtn.style.marginTop = '10px';
+            mapBtn.innerHTML = '🗺️ View on Map';
+            mapBtn.onclick = () => window.open(`https://www.google.com/maps?q=${item.lat},${item.lng}`, '_blank');
+            actionArea.appendChild(mapBtn);
+        }
+
+        card.innerHTML = innerHTML;
+        card.appendChild(actionArea);
         donationsContainer.appendChild(card);
     });
 }
 
-// Forms & Modals
-// -- Donor Modal --
-function openDonateModal() { if(donateModal) donateModal.classList.add('active'); }
-function closeDonateModal() { if(donateModal) donateModal.classList.remove('active'); }
+function renderRequirements(reqs) {
+    const container = document.getElementById('ngo-requirements-container');
+    const myList = document.getElementById('my-requirements-list');
+    
+    if (container) {
+        container.innerHTML = '';
+        const activeReqs = reqs.filter(r => r.ngo_id !== currentUser.id);
+        if (activeReqs.length === 0) container.innerHTML = '<p style="color:var(--text-muted); font-size:0.8rem;">No active requirements.</p>';
+        activeReqs.forEach(r => {
+            const card = document.createElement('div');
+            card.className = `req-card urgency-${r.urgency.toLowerCase()}`;
+            card.style.minWidth = '220px';
+            card.innerHTML = `
+                <strong style="color:var(--text-main);">${r.title}</strong><br>
+                <span style="font-size:0.75rem;">Qty: ${r.quantity}</span><br>
+                <span style="font-size:0.7rem; color:var(--text-muted);">By: ${r.ngo_name}</span>
+            `;
+            container.appendChild(card);
+        });
+    }
 
+    if (myList) {
+        myList.innerHTML = '';
+        const myReqs = reqs.filter(r => r.ngo_id === currentUser.id);
+        if (myReqs.length === 0) myList.innerHTML = '<p style="font-size:0.8rem; color:var(--text-muted);">No requirements posted.</p>';
+        myReqs.forEach(r => {
+            const card = document.createElement('div');
+            card.className = 'req-card urgency-normal';
+            card.style.minWidth = '180px';
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>${r.title}</strong>
+                    <button onclick="deleteRequirement('${r.id}')" style="background:none; border:none; color:red; cursor:pointer;">&times;</button>
+                </div>
+                <span style="font-size:0.75rem;">Qty: ${r.quantity}</span>
+            `;
+            myList.appendChild(card);
+        });
+    }
+}
+
+// --- FORMS & MODALS ---
+
+// -- NGO Requirements --
+function openReqModal() { document.getElementById('req-modal').classList.add('active'); }
+function closeReqModal() { document.getElementById('req-modal').classList.remove('active'); }
+
+const reqForm = document.getElementById('req-form');
+if (reqForm) {
+    reqForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+            ngo_id: currentUser.id,
+            ngo_name: currentUser.name,
+            title: document.getElementById('reqTitle').value,
+            quantity: document.getElementById('reqQty').value,
+            urgency: document.getElementById('reqUrgency').value
+        };
+        await fetch('/api/ngo/requirements', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        e.target.reset();
+        closeReqModal();
+    });
+}
+
+async function deleteRequirement(id) {
+    if(!confirm('Delete this requirement?')) return;
+    await fetch(`/api/ngo/requirements/${id}`, { method: 'DELETE' });
+    fetchRequirements();
+}
+
+// -- Donation Form + Image Upload --
 const dnForm = document.getElementById('donation-form');
 if (dnForm) {
     dnForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('submit-donation-btn');
-        const originalText = btn.textContent;
         btn.textContent = 'Posting...';
         
-        try {
-            await fetch('/api/listings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    donor_id: currentUser.id,
-                    food_type: document.getElementById('foodType').value,
-                    quantity: document.getElementById('quantity').value,
-                    expiry_time: document.getElementById('expiryTime').value,
-                    location: document.getElementById('location').value,
-                    auto_accept: document.getElementById('autoAccept') ? document.getElementById('autoAccept').checked : false
-                })
-            });
-            e.target.reset();
-            closeDonateModal();
-        } catch (err) {
-            console.error(err);
-        } finally {
-            btn.textContent = originalText;
+        // Handle Image First
+        const imgInput = document.getElementById('foodImage');
+        let imageUrl = '';
+        if (imgInput.files.length > 0) {
+            const formData = new FormData();
+            formData.append('file', imgInput.files[0]);
+            const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+            const uploadData = await uploadRes.json();
+            imageUrl = uploadData.image_url;
         }
+
+        const data = {
+            donor_id: currentUser.id,
+            food_type: document.getElementById('foodType').value,
+            quantity: document.getElementById('quantity').value,
+            diet_type: document.getElementById('dietType').value,
+            category: document.getElementById('foodCategory').value,
+            expiry_time: document.getElementById('expiryTime').value,
+            location: document.getElementById('location').value,
+            image_url: imageUrl,
+            auto_accept: document.getElementById('autoAccept')?.checked || false
+        };
+
+        await fetch('/api/listings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        btn.textContent = 'Post Listing';
+        e.target.reset();
+        closeDonateModal();
     });
 }
 
-// -- NGO Claim Modal --
-function openClaimModal(id) {
-    claimTargetId = id;
-    if(claimModal) claimModal.classList.add('active');
+// -- Ratings --
+function openRatingModal(listingId, targetUserId) {
+    ratingTargetListingId = listingId;
+    ratingTargetUserId = targetUserId;
+    ratingModal.classList.add('active');
 }
-function closeClaimModal() {
-    if(claimModal) claimModal.classList.remove('active');
-    claimTargetId = null;
+function closeRatingModal() { ratingModal.classList.remove('active'); }
+
+function setupStars() {
+    const stars = document.querySelectorAll('#star-selector span');
+    stars.forEach(s => {
+        s.onclick = () => {
+            const val = s.getAttribute('data-val');
+            document.getElementById('ratingValue').value = val;
+            stars.forEach(st => {
+                st.style.opacity = st.getAttribute('data-val') <= val ? '1' : '0.3';
+            });
+        };
+    });
 }
+
+const ratingForm = document.getElementById('rating-form');
+if (ratingForm) {
+    ratingForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+            from_user_id: currentUser.id,
+            to_user_id: ratingTargetUserId,
+            listing_id: ratingTargetListingId,
+            rating: document.getElementById('ratingValue').value,
+            comment: document.getElementById('ratingComment').value
+        };
+        await fetch('/api/ratings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        alert('Thank you for your feedback!');
+        closeRatingModal();
+    });
+}
+
+// Global actions
+async function markDone(listingId) { await fetch(`/api/listings/${listingId}/complete`, { method: 'POST' }); }
+async function approveRequest(listingId, reqId) {
+    await fetch(`/api/listings/${listingId}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ request_id: reqId })
+    });
+}
+function openDonateModal() { donateModal.classList.add('active'); }
+function closeDonateModal() { donateModal.classList.remove('active'); }
+function openClaimModal(id) { claimTargetId = id; claimModal.classList.add('active'); }
+function closeClaimModal() { claimModal.classList.remove('active'); }
 
 const clForm = document.getElementById('claim-form');
 if (clForm) {
     clForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (!claimTargetId) return;
-
-        const btn = e.target.querySelector('button');
-        const originalText = btn.textContent;
-        btn.textContent = 'Requesting...';
-
-        try {
-            await fetch(`/api/listings/${claimTargetId}/request`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ngo_id: currentUser.id })
-            });
-            closeClaimModal();
-        } catch (err) {
-            console.error(err);
-        } finally {
-            btn.textContent = originalText;
-        }
+        await fetch(`/api/listings/${claimTargetId}/request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ngo_id: currentUser.id })
+        });
+        closeClaimModal();
     });
 }

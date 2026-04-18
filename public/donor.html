@@ -6,6 +6,8 @@
     <title>Sahayata | Donor Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
@@ -27,11 +29,18 @@
     </nav>
 
     <div style="padding: 3rem 5%; display: flex; justify-content: space-between; align-items: center;">
-        <div>
-            <h2>Your active food listings</h2>
-            <p style="color: var(--text-muted)">Manage your available and completed food donations here.</p>
-        </div>
         <button class="btn btn-primary" onclick="openDonateModal()">+ Add Food Listing</button>
+    </div>
+
+    <!-- NGO Requirements Section -->
+    <div style="padding: 0 5% 3rem;">
+        <div class="glass-card" style="padding: 1.5rem;">
+            <h3 style="margin-bottom: 1rem; color: var(--secondary-color);">🚨 Urgent NGO Needs</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Verified NGOs in your area have requested the following items. Can you help?</p>
+            <div id="ngo-requirements-container" style="display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 1rem;">
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Checking for active requirements...</p>
+            </div>
+        </div>
     </div>
 
     <section class="dashboard" style="padding-top: 0;">
@@ -50,12 +59,36 @@
             <h2 class="modal-title">Log a New Food Listing</h2>
             <form id="donation-form">
                 <div class="form-group">
-                    <label>Type of Food</label>
-                    <input type="text" id="foodType" placeholder="e.g. Fresh Produce, 30 Rice Bags" required>
+                    <label>Food Item</label>
+                    <input type="text" id="foodType" placeholder="e.g. Fresh Veggies, Bread, etc." required>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Quantity</label>
+                        <input type="text" id="quantity" placeholder="e.g. 5kg, 20 packets" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="foodCategory">
+                            <option value="Cooked Meals">Cooked Meals</option>
+                            <option value="Raw Groceries">Raw Groceries</option>
+                            <option value="Bakery Items">Bakery Items</option>
+                            <option value="Dairy & Eggs">Dairy & Eggs</option>
+                            <option value="Beverages">Beverages</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label>Quantity</label>
-                    <input type="text" id="quantity" placeholder="e.g. 50 kg" required>
+                    <label>Diet Type</label>
+                    <select id="dietType">
+                        <option value="veg">Vegetarian (Veg)</option>
+                        <option value="nonveg">Non-Vegetarian (Non-Veg)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Food Image</label>
+                    <input type="file" id="foodImage" accept="image/*" style="padding: 0.5rem 0;">
+                    <input type="hidden" id="imageUrl">
                 </div>
                 <div class="form-group">
                     <label>Expiry Time</label>

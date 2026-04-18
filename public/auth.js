@@ -78,7 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const payload = {
                 role: role,
                 name: document.getElementById('name').value,
-                password: document.getElementById('password').value
+                password: document.getElementById('password').value,
+                lat: document.getElementById('lat').value,
+                lng: document.getElementById('lng').value
             };
             
             if (role === 'donor') {

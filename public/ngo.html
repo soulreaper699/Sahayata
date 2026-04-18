@@ -6,6 +6,8 @@
     <title>Sahayata | NGO Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
@@ -26,9 +28,22 @@
         </div>
     </nav>
 
-    <div style="padding: 3rem 5%;">
-        <h2>Live Donations Feed</h2>
-        <p style="color: var(--text-muted)">Accept pending food donations in your area. You will receive contact info upon acceptance.</p>
+    <div style="padding: 3rem 5%; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2>Live Donations Feed</h2>
+            <p style="color: var(--text-muted)">Accept pending food donations in your area. You will receive contact info upon acceptance.</p>
+        </div>
+        <button class="btn btn-secondary" onclick="openReqModal()" style="border-color: var(--secondary-color); color: var(--secondary-color);">+ Post Requirement</button>
+    </div>
+
+    <!-- NGO Own Requirements Section -->
+    <div style="padding: 0 5% 2rem;" id="ngo-own-req-section">
+        <div class="glass-card" style="padding: 1.5rem; background: rgba(74, 144, 226, 0.05);">
+            <h3 style="font-size: 1rem; margin-bottom: 1rem;">Your Active Requirements</h3>
+            <div id="my-requirements-list" style="display: flex; gap: 10px; overflow-x: auto;">
+                <p style="font-size: 0.8rem; color: var(--text-muted);">No requirements posted yet.</p>
+            </div>
+        </div>
     </div>
 
     <section class="dashboard" style="padding-top: 0;">
@@ -40,14 +55,50 @@
         </div>
     </section>
 
-    <!-- Claim Confirm Modal -->
-    <div id="claim-modal" class="modal">
+    <!-- NGO Requirement Modal -->
+    <div id="req-modal" class="modal">
         <div class="modal-content glass-card">
-            <span class="close-btn" onclick="closeClaimModal()">&times;</span>
-            <h2 class="modal-title">Confirm Acceptance</h2>
-            <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem;">By clicking confirm, you agree to coordinate the pickup of this food explicitly. The donor's contact details will be shared immediately.</p>
-            <form id="claim-form">
-                <button type="submit" class="btn btn-primary btn-block">Confirm & Get Contact Info</button>
+            <span class="close-btn" onclick="closeReqModal()">&times;</span>
+            <h2 class="modal-title">Post a Requirement</h2>
+            <form id="req-form">
+                <div class="form-group">
+                    <label>What do you need?</label>
+                    <input type="text" id="reqTitle" placeholder="e.g. Cooked Rice, Pulses, Milk" required>
+                </div>
+                <div class="form-group">
+                    <label>Desired Quantity</label>
+                    <input type="text" id="reqQty" placeholder="e.g. For 50 people, 10kg" required>
+                </div>
+                <div class="form-group">
+                    <label>Urgency Level</label>
+                    <select id="reqUrgency">
+                        <option value="Normal">Normal</option>
+                        <option value="High">High (Urgent)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-secondary btn-block" id="submit-req-btn">Post to Network</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Rating Modal -->
+    <div id="rating-modal" class="modal">
+        <div class="modal-content glass-card" style="max-width: 450px;">
+            <span class="close-btn" onclick="closeRatingModal()">&times;</span>
+            <h2 class="modal-title">Rate the Transaction</h2>
+            <p style="text-align: center; color: var(--text-muted); margin-bottom: 1.5rem;">How was your experience with this exchange?</p>
+            
+            <div id="star-selector" style="display: flex; justify-content: center; gap: 10px; font-size: 2.5rem; margin-bottom: 1.5rem; cursor: pointer;">
+                <span data-val="1">⭐</span><span data-val="2">⭐</span><span data-val="3">⭐</span><span data-val="4">⭐</span><span data-val="5">⭐</span>
+            </div>
+            
+            <form id="rating-form">
+                <input type="hidden" id="ratingValue" value="5">
+                <div class="form-group">
+                    <label>Short Review (Optional)</label>
+                    <textarea id="ratingComment" placeholder="e.g. Great quality and easy pickup!" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Submit Feedback</button>
             </form>
         </div>
     </div>
