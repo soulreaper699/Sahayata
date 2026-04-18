@@ -11,20 +11,21 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 # --- DATABASE CONNECTION ---
 MONGO_URI = os.environ.get('MONGO_URI', 'mongodb+srv://chiragnegi14_db_user:1486chirag@cluster0.m5fw1q6.mongodb.net/?appName=Cluster0')
-_db = None
+
+# Initialize once at startup — avoids eventlet/ssl recursion bug
+_client = MongoClient(MONGO_URI, tls=True, tlsAllowInvalidCertificates=True)
+db = _client['sahayata']
+
+# Ensure the master admin always exists (idempotent)
+db.admins.update_one(
+    {"name": "admin@123"},
+    {"$setOnInsert": {"id": "admin-1", "name": "admin@123", "password": "fusionhacks"}},
+    upsert=True
+)
 
 def get_db():
-    global _db
-    if _db is None:
-        client = MongoClient(MONGO_URI)
-        _db = client['sahayata']
-        # Ensure the master admin exists in the database (idempotent upsert)
-        _db.admins.update_one(
-            {"name": "admin@123"},
-            {"$setOnInsert": {"id": "admin-1", "name": "admin@123", "password": "fusionhacks"}},
-            upsert=True
-        )
-    return _db
+    return db
+
 
 def load_data():
     db = get_db()
