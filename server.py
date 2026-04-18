@@ -7,7 +7,7 @@ from pymongo import MongoClient
 
 app = Flask(__name__, static_folder='public', static_url_path='')
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
 
 # --- DATABASE CONNECTION ---
 MONGO_URI = os.environ.get('MONGO_URI', 'mongodb+srv://chiragnegi14_db_user:1486chirag@cluster0.m5fw1q6.mongodb.net/?appName=Cluster0')
