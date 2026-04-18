@@ -97,10 +97,6 @@ def login():
             user_out['role'] = 'ngo'
             return jsonify(user_out), 200
 
-    # Hardcoded Master Admin for reliability (since data.json is git-ignored)
-    if name == "admin@123" and password == "fusionhacks":
-        return jsonify({"id": "admin-1", "name": "admin@123", "role": "admin"}), 200
-
     for u in data.get('admins', []):
         if u['name'] == name and u['password'] == password:
             user_out = {k:v for k,v in u.items() if k != 'password'}
