@@ -289,6 +289,7 @@ def ngo_requirements():
             "title": content.get("title"),
             "quantity": content.get("quantity"),
             "urgency": content.get("urgency", "Normal"),
+            "needed_by": content.get("needed_by"),
             "timestamp": int(time.time())
         }
         data['ngo_requirements'].insert(0, new_req)

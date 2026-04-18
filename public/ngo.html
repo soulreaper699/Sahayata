@@ -77,6 +77,10 @@
                         <option value="High">High (Urgent)</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label>Needed By</label>
+                    <input type="datetime-local" id="reqExpiry" required style="color-scheme: dark;">
+                </div>
                 <button type="submit" class="btn btn-secondary btn-block" id="submit-req-btn">Post to Network</button>
             </form>
         </div>
@@ -160,6 +164,19 @@
     </footer>
     <script src="auth.js"></script>
     <script src="app.js"></script>
+    <script>
+        // Set min date for requirement expiry to now
+        const reqExpiryInput = document.getElementById('reqExpiry');
+        if (reqExpiryInput) {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            reqExpiryInput.min = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    </script>
     <script type="text/javascript">
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({

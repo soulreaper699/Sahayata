@@ -164,6 +164,19 @@
     </footer>
     <script src="auth.js"></script>
     <script src="app.js"></script>
+    <script>
+        // Set min date for expiry time to now
+        const expiryInput = document.getElementById('expiryTime');
+        if (expiryInput) {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            expiryInput.min = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    </script>
     <script type="text/javascript">
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({

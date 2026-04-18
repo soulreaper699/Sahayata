@@ -215,6 +215,7 @@ function renderRequirements(reqs) {
             card.innerHTML = `
                 <strong style="color:var(--text-main);">${r.title}</strong><br>
                 <span style="font-size:0.75rem;">Qty: ${r.quantity}</span><br>
+                <span style="font-size:0.7rem; color:var(--text-muted);">Needed: ${r.needed_by ? new Date(r.needed_by).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : 'ASAP'}</span><br>
                 <span style="font-size:0.7rem; color:var(--text-muted);">By: ${r.ngo_name}</span>
             `;
             container.appendChild(card);
@@ -234,7 +235,8 @@ function renderRequirements(reqs) {
                     <strong>${r.title}</strong>
                     <button onclick="deleteRequirement('${r.id}')" style="background:none; border:none; color:red; cursor:pointer;">&times;</button>
                 </div>
-                <span style="font-size:0.75rem;">Qty: ${r.quantity}</span>
+                <span style="font-size:0.75rem;">Qty: ${r.quantity}</span><br>
+                <span style="font-size:0.7rem; color:var(--text-muted);">Needed: ${r.needed_by ? new Date(r.needed_by).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : 'ASAP'}</span>
             `;
             myList.appendChild(card);
         });
@@ -256,7 +258,8 @@ if (reqForm) {
             ngo_name: currentUser.name,
             title: document.getElementById('reqTitle').value,
             quantity: document.getElementById('reqQty').value,
-            urgency: document.getElementById('reqUrgency').value
+            urgency: document.getElementById('reqUrgency').value,
+            needed_by: document.getElementById('reqExpiry').value
         };
         await fetch('/api/ngo/requirements', {
             method: 'POST',
