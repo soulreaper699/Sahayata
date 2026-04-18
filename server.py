@@ -16,9 +16,13 @@ def load_data():
         return {"donors": [], "ngos": [], "food_listings": [], "requests": []}
     with open(DATA_FILE, 'r') as f:
         try:
-            return json.load(f)
+            d = json.load(f)
+            # Ensure all keys exist
+            for key in ["donors", "ngos", "food_listings", "requests", "admins"]:
+                if key not in d: d[key] = []
+            return d
         except json.JSONDecodeError:
-            return {"donors": [], "ngos": [], "food_listings": [], "requests": []}
+            return {"donors": [], "ngos": [], "food_listings": [], "requests": [], "admins": []}
 
 def save_data(data):
     with open(DATA_FILE, 'w') as f:
@@ -91,6 +95,12 @@ def login():
         if u['name'] == name and u['password'] == password:
             user_out = {k:v for k,v in u.items() if k != 'password'}
             user_out['role'] = 'ngo'
+            return jsonify(user_out), 200
+
+    for u in data.get('admins', []):
+        if u['name'] == name and u['password'] == password:
+            user_out = {k:v for k,v in u.items() if k != 'password'}
+            user_out['role'] = 'admin'
             return jsonify(user_out), 200
             
     return jsonify({"error": "Invalid credentials"}), 401
@@ -272,12 +282,6 @@ def complete_listing(listing_id):
 def get_stats():
     data = load_data()
     completed_meals = 0
-    # Sum up quantities for completed listings
-    # Assuming quantity string like "5kg" or "10 boxes" - we'll just count listings for now or try to parse
-    # To keep it simple and match the "50k+" vibe, let's count listings or sum if possible.
-    # Actually, the user's UI says "50k+ Meals Saved". If we only have 1-2 test items, it will look empty.
-    # Let's count total completed listings and maybe multiply by a factor or just show the raw count.
-    # For a real app, we'd sum the quantities.
     completed_count = len([l for l in data['food_listings'] if l['status'] == 'completed'])
     ngo_count = len(data['ngos'])
     
@@ -285,6 +289,39 @@ def get_stats():
         "meals_saved": completed_count,
         "active_ngos": ngo_count
     })
+
+# --- ADMIN ENDPOINTS ---
+@app.route('/api/admin/overview', methods=['GET'])
+def admin_overview():
+    # In a real app, we'd check session/token here
+    data = load_data()
+    return jsonify(data)
+
+@app.route('/api/admin/delete-listing/<listing_id>', methods=['DELETE'])
+def admin_delete_listing(listing_id):
+    data = load_data()
+    data['food_listings'] = [l for l in data['food_listings'] if l['id'] != listing_id]
+    # Also delete associated requests
+    data['requests'] = [r for r in data['requests'] if r['food_id'] != listing_id]
+    save_data(data)
+    socketio.emit('listing_updated')
+    return jsonify({"success": True}), 200
+
+@app.route('/api/admin/delete-user/<role>/<user_id>', methods=['DELETE'])
+def admin_delete_user(role, user_id):
+    data = load_data()
+    if role == 'donor':
+        data['donors'] = [u for u in data['donors'] if u['id'] != user_id]
+        # Clean up listings by this donor
+        data['food_listings'] = [l for l in data['food_listings'] if l['donor_id'] != user_id]
+    elif role == 'ngo':
+        data['ngos'] = [u for u in data['ngos'] if u['id'] != user_id]
+        # Clean up requests by this NGO
+        data['requests'] = [r for r in data['requests'] if r['ngo_id'] != user_id]
+        
+    save_data(data)
+    socketio.emit('listing_updated')
+    return jsonify({"success": True}), 200
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=5000, allow_unsafe_werkzeug=True)

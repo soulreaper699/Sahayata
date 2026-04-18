@@ -6,16 +6,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const user = JSON.parse(userJson);
         const currentPath = window.location.pathname;
         if (currentPath.includes('login.html') || currentPath.includes('register.html')) {
-             window.location.href = user.role === 'donor' ? 'donor.html' : 'ngo.html';
+            if (user.role === 'admin') window.location.href = 'admin.html';
+            else window.location.href = user.role === 'donor' ? 'donor.html' : 'ngo.html';
         }
         
         // If we are on the landing page, update the toolbar
         if (currentPath === '/' || currentPath.includes('index.html')) {
             const dynamicNav = document.getElementById('dynamic-nav');
             if (dynamicNav) {
+                let dashUrl = user.role === 'donor' ? 'donor.html' : 'ngo.html';
+                if (user.role === 'admin') dashUrl = 'admin.html';
+                
                 dynamicNav.innerHTML = `
                     <span style="color:var(--text-main); font-weight:600; margin-right: 15px;">Hello, ${user.name}</span>
-                    <a href="${user.role === 'donor' ? 'donor.html' : 'ngo.html'}" class="btn btn-primary" style="color:white !important; text-decoration: none;">Go to Dashboard</a>
+                    <a href="${dashUrl}" class="btn btn-primary" style="color:white !important; text-decoration: none;">Go to Dashboard</a>
                     <button class="btn btn-secondary" onclick="logout()" style="margin-left: 10px;">Logout</button>
                 `;
             }
