@@ -32,12 +32,24 @@ h1, h2, h3 { font-family: var(--font-heading); font-weight: 600; color: var(--te
 .highlight-red { color: var(--accent-red); }
 
 /* Animated Light Background Elements */
+/* NEW: Particle Background Container */
+#tsparticles {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    background: radial-gradient(circle at center, #ffffff 0%, #f7f9fc 100%);
+}
+
 .ambient-light {
     position: fixed;
     border-radius: 50%;
     filter: blur(80px);
     z-index: -1;
-    opacity: 0.6;
+    opacity: 0.25; /* Throttled for particle visibility */
+    transition: var(--transition);
     animation: moveShapes 15s ease-in-out infinite alternate;
 }
 
