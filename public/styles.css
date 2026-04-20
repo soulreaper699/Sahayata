@@ -1,14 +1,14 @@
 :root {
-    --bg-color: #fffbf5; /* Warm Canvas */
-    --card-bg: rgba(255, 255, 255, 0.75);
-    --card-border: rgba(251, 191, 36, 0.2);
-    --primary-color: #f97316; /* Vibrant Orange */
-    --primary-glow: rgba(249, 115, 22, 0.25);
-    --secondary-color: #fbbf24; /* Golden Amber */
-    --accent-red: #dc2626;
-    --accent-orange: #ea580c; /* Deep Orange */
-    --text-main: #422006; /* Warm Brown */
-    --text-muted: #78716c; /* Stone */
+    --bg-color: #fffcfa; /* Soft Peach Blush */
+    --card-bg: rgba(255, 255, 255, 0.85);
+    --card-border: rgba(255, 107, 53, 0.15);
+    --primary-color: #ff6b35; /* Electric Tangerine */
+    --primary-glow: rgba(255, 107, 53, 0.3);
+    --secondary-color: #ffca3a; /* Sunny Yellow */
+    --accent-red: #e63946; /* Vivid Ruby */
+    --accent-orange: #f25f22; /* Deep Citrus */
+    --text-main: #3d2b1f; /* Dark Mocha */
+    --text-muted: #8c7b73; /* Smooth Clay */
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Inter', sans-serif;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
