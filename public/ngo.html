@@ -37,7 +37,9 @@
                     <!-- Populated by JS -->
                 </div>
             </div>
-            <button class="btn btn-secondary" onclick="openReqModal()" style="border-color: var(--secondary-color); color: var(--secondary-color);">+ Post Requirement</button>
+            <div id="dashboard-actions" style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" onclick="openReqModal()" style="border-color: var(--secondary-color); color: var(--secondary-color);">+ Post Requirement</button>
+            </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 3rem;">
@@ -62,6 +64,65 @@
                     <p style="font-size: 0.8rem; color: var(--text-muted);">No requirements posted yet.</p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Donation Modal (For Farmers to post Surplus) -->
+    <div id="donate-modal" class="modal">
+        <div class="modal-content glass-card">
+            <span class="close-btn" onclick="closeDonateModal()">&times;</span>
+            <h2 class="modal-title">Log Surplus Produce</h2>
+            <form id="donation-form">
+                <div class="form-group">
+                    <label>Produce Type</label>
+                    <input type="text" id="foodType" placeholder="e.g. Ugly Carrots, Surplus Wheat" required>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Quantity</label>
+                        <input type="text" id="quantity" placeholder="e.g. 5kg, 1 truck" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="foodCategory">
+                            <option value="Raw Groceries">Raw Groceries</option>
+                            <option value="Cooked Meals">Cooked Meals</option>
+                            <option value="Bakery Items">Bakery Items</option>
+                            <option value="Dairy & Eggs">Dairy & Eggs</option>
+                            <option value="Beverages">Beverages</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Diet Type</label>
+                    <select id="dietType">
+                        <option value="veg">Vegetarian (Veg)</option>
+                        <option value="nonveg">Non-Vegetarian (Non-Veg)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Food Image</label>
+                    <input type="file" id="foodImage" accept="image/*" style="padding: 0.5rem 0;">
+                    <input type="hidden" id="imageUrl">
+                </div>
+                <div class="form-group">
+                    <label>Expiry Time</label>
+                    <input type="datetime-local" id="expiryTime" required style="color-scheme: dark;">
+                </div>
+                <div class="form-group">
+                    <label>Pickup Location</label>
+                    <input type="text" id="location" placeholder="e.g. Farm Gate 3" required>
+                </div>
+                <div class="form-group" style="display:flex; align-items:center; gap: 10px; margin-top: 1rem; margin-bottom: 2rem;">
+                    <input type="checkbox" id="autoAccept" style="width: auto; padding: 0;">
+                    <label for="autoAccept" style="margin: 0; color: var(--text-main); font-weight: normal;">Auto-Accept first NGO claim request?</label>
+                </div>
+                <div class="form-group" style="display:flex; align-items:center; gap: 10px; margin-top: -1.5rem; margin-bottom: 2rem; display:none;">
+                    <input type="checkbox" id="isCompost" style="width: auto; padding: 0;">
+                    <label for="isCompost" style="margin: 0; color: var(--text-main); font-weight: normal;">Mark as Unfit</label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="submit-donation-btn">Post Listing</button>
+            </form>
         </div>
     </div>
 

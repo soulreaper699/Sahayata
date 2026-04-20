@@ -24,6 +24,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const greeting = document.getElementById('user-greeting');
     if (greeting) greeting.textContent = `Hello, ${currentUser.name}`;
     
+    if (currentUser.role === 'farmer') {
+        const actionArea = document.getElementById('dashboard-actions');
+        if (actionArea) {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-primary';
+            btn.textContent = '+ Post Surplus Crop';
+            btn.onclick = () => openDonateModal();
+            actionArea.insertBefore(btn, actionArea.firstChild);
+        }
+    }
+    
     fetchListings();
     fetchRequirements();
     fetchTrustStats();
@@ -132,6 +143,7 @@ function renderListings() {
                 </div>
                 <div style="margin-bottom: 10px;">
                     <span class="category-tag">${item.category || 'General'}</span>
+                    ${item.distance_km != null && (currentUser.role === 'ngo' || currentUser.role === 'farmer') ? `<span class="eco-tag" style="background: rgba(39, 174, 96, 0.1); border: 1px solid var(--accent-green); color: var(--accent-green); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; margin-left: 5px;">🌍 ${item.distance_km}km (~${item.transport_co2}kg CO2)</span>` : ''}
                 </div>
                 <p style="margin-bottom: 6px;"><span>Quantity:</span> <span style="color:var(--text-main); font-weight: 600">${item.quantity}</span></p>
                 <div class="donor-info">
@@ -409,12 +421,32 @@ function renderTrustHeader(data) {
     const joined = data.joined_at ? new Date(data.joined_at * 1000) : new Date();
     const joinedStr = joined.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     
+    const impact = data.impact_score || 0;
+    const waterSaved = Math.round(impact * 320);
+    const mealsRestored = Math.round(impact * 0.8);
+    
+    let badgeHtml = '';
+    if (impact > 0 && impact < 10) {
+        badgeHtml = `<div class="trust-badge" style="border-color: #A3E4D7; color: #117A65; background: #E8F8F5;">🌱 Seedling</div>`;
+    } else if (impact >= 10 && impact < 50) {
+        badgeHtml = `<div class="trust-badge" style="border-color: #5DADE2; color: #154360; background: #EBF5FB;">🌍 Climate Champion</div>`;
+    } else if (impact >= 50) {
+        badgeHtml = `<div class="trust-badge" style="border-color: #F4D03F; color: #7D6608; background: #FEF9E7;">🦸 Zero Hunger Hero</div>`;
+    }
+    
     container.innerHTML = `
+        ${badgeHtml}
         <div class="trust-badge">
             <span>🛡️ Serving Since ${joinedStr}</span>
         </div>
         <div class="trust-badge" style="border-color: var(--secondary-color); color: var(--secondary-color);">
-            <span>🌿 ${data.impact_score || 0} kg CO2 Saved</span>
+            <span>🌿 ${impact.toFixed(1)} kg CO2 Saved</span>
+        </div>
+        <div class="trust-badge" style="border-color: #3498db; color: #3498db;">
+            <span>💧 ${waterSaved.toLocaleString()} L Water</span>
+        </div>
+        <div class="trust-badge" style="border-color: #e67e22; color: #e67e22;">
+            <span>🍲 ${mealsRestored.toLocaleString()} Meals</span>
         </div>
         <div class="star-rating">
             ${Array.from({length: 5}, (_, i) => `<span class="star ${i < Math.floor(data.average) ? '' : 'empty'}">★</span>`).join('')}

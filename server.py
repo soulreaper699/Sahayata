@@ -2,6 +2,7 @@ import os
 import sqlite3
 import uuid
 import time
+import math
 from flask import Flask, request, jsonify, send_from_directory
 from flask_socketio import SocketIO
 from flask_cors import CORS
@@ -22,6 +23,21 @@ def allowed_file(filename):
 
 # --- DB INIT ---
 DB_FILE = 'sahayata.db'
+
+def calculate_distance(lat1, lon1, lat2, lon2):
+    if not all([lat1, lon1, lat2, lon2]): return None
+    try:
+        lat1, lon1, lat2, lon2 = map(float, [lat1, lon1, lat2, lon2])
+    except ValueError:
+        return None
+    R = 6371 # Radius of earth in km
+    dLat = math.radians(lat2 - lat1)
+    dLon = math.radians(lon2 - lon1)
+    a = math.sin(dLat/2) * math.sin(dLat/2) + \
+        math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * \
+        math.sin(dLon/2) * math.sin(dLon/2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    return round(R * c, 2)
 
 def get_db():
     conn = sqlite3.connect(DB_FILE)
@@ -221,6 +237,16 @@ def get_listings():
         donor = users.get(l['donor_id'])
         if donor:
             l['donor_name'] = donor['name']
+            l['lat'] = donor.get('lat')
+            l['lng'] = donor.get('lng')
+            
+        current_user = users.get(user_id)
+        if current_user and donor:
+            dist = calculate_distance(donor.get('lat'), donor.get('lng'), current_user.get('lat'), current_user.get('lng'))
+            if dist is not None:
+                l['distance_km'] = dist
+                # roughly avg 0.12kg CO2 per km for a small delivery vehicle
+                l['transport_co2'] = round(dist * 0.12, 2)
             
         l['auto_accept'] = bool(l['auto_accept'])
             
