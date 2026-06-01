@@ -42,6 +42,10 @@
             </div>
 
             <form id="register-form">
+                <!-- Google Sign-Up Hidden Fields -->
+                <input type="hidden" id="google-id" name="google_id">
+                <input type="hidden" id="google-email" name="email">
+
                 <div class="form-group">
                     <label>I am a...</label>
                     <select id="role" onchange="toggleFields()">
@@ -131,6 +135,37 @@
             marker = L.marker(e.latlng).addTo(map);
             document.getElementById('lat').value = e.latlng.lat;
             document.getElementById('lng').value = e.latlng.lng;
+        });
+
+        // Check for Google Sign-Up
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isGoogleSignup = urlParams.get('google_signup') === 'true';
+            
+            if (isGoogleSignup) {
+                const email = urlParams.get('email');
+                const name = urlParams.get('name');
+                const googleId = urlParams.get('google_id');
+                
+                document.getElementById('google-id').value = googleId || '';
+                document.getElementById('google-email').value = email || '';
+                document.getElementById('name').value = name || '';
+                
+                // Hide and disable password field
+                const pwdInput = document.getElementById('password');
+                if (pwdInput) {
+                    const pwdField = pwdInput.closest('.form-group');
+                    if (pwdField) pwdField.style.display = 'none';
+                    pwdInput.removeAttribute('required');
+                    pwdInput.value = 'google-oauth-placeholder'; // dummy pass
+                }
+                
+                // Change header titles
+                const headerH2 = document.querySelector('.auth-header h2');
+                const headerP = document.querySelector('.auth-header p');
+                if (headerH2) headerH2.textContent = "Complete registration";
+                if (headerP) headerP.textContent = `Set up your profile for Google account ${email}`;
+            }
         });
 
         // Initialize for first view

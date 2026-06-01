@@ -67,6 +67,14 @@ def init_db():
         c.execute("ALTER TABLE users ADD COLUMN impact_score REAL DEFAULT 0.0")
     except sqlite3.OperationalError:
         pass
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN email TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN google_id TEXT")
+    except sqlite3.OperationalError:
+        pass
     
     # Needs admin?
     c.execute("SELECT id FROM users WHERE role='admin'")
@@ -140,6 +148,9 @@ def register():
     content = request.json
     role = content.get('role')
     name = content.get('name')
+    google_id = content.get('google_id')
+    email = content.get('email')
+    password = content.get('password', '')
     
     conn = get_db()
     c = conn.cursor()
@@ -153,11 +164,11 @@ def register():
     joined_at = int(time.time())
     
     if role == 'donor':
-        c.execute("INSERT INTO users (id, name, phone, password, lat, lng, joined_at, role, impact_score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                  (user_id, name, content.get('phone'), content.get('password'), content.get('lat'), content.get('lng'), joined_at, role, 0.0))
+        c.execute("INSERT INTO users (id, name, phone, password, lat, lng, joined_at, role, impact_score, email, google_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                  (user_id, name, content.get('phone'), password, content.get('lat'), content.get('lng'), joined_at, role, 0.0, email, google_id))
     elif role in ['ngo', 'farmer']:
-        c.execute("INSERT INTO users (id, name, capacity, location, password, lat, lng, joined_at, role, impact_score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                  (user_id, name, content.get('capacity'), content.get('location'), content.get('password'), content.get('lat'), content.get('lng'), joined_at, role, 0.0))
+        c.execute("INSERT INTO users (id, name, capacity, location, password, lat, lng, joined_at, role, impact_score, email, google_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                  (user_id, name, content.get('capacity'), content.get('location'), password, content.get('lat'), content.get('lng'), joined_at, role, 0.0, email, google_id))
     else:
         conn.close()
         return jsonify({"error": "Invalid role"}), 400
@@ -167,7 +178,7 @@ def register():
     
     user_out = {
         "id": user_id, "name": name, "lat": content.get('lat'), "lng": content.get('lng'),
-        "joined_at": joined_at, "role": role, "impact_score": 0.0
+        "joined_at": joined_at, "role": role, "impact_score": 0.0, "email": email, "google_id": google_id
     }
     if role == 'donor': user_out['phone'] = content.get('phone')
     if role in ['ngo', 'farmer']: 
@@ -175,6 +186,44 @@ def register():
         user_out['location'] = content.get('location')
         
     return jsonify(user_out), 201
+
+@app.route('/api/auth/google', methods=['POST'])
+def google_auth():
+    content = request.json
+    google_id = content.get('google_id')
+    email = content.get('email')
+    name = content.get('name')
+    
+    if not google_id or not email:
+        return jsonify({"error": "Missing google_id or email"}), 400
+        
+    conn = get_db()
+    c = conn.cursor()
+    # Find user by google_id first, then by email
+    c.execute("SELECT * FROM users WHERE google_id=?", (google_id,))
+    user = c.fetchone()
+    
+    if not user:
+        c.execute("SELECT * FROM users WHERE email=?", (email,))
+        user = c.fetchone()
+        if user:
+            # Associate google_id with existing email account
+            c.execute("UPDATE users SET google_id=? WHERE id=?", (google_id, user['id']))
+            conn.commit()
+            # Re-fetch
+            c.execute("SELECT * FROM users WHERE id=?", (user['id'],))
+            user = c.fetchone()
+            
+    conn.close()
+    
+    if user:
+        user_out = dict(user)
+        if 'password' in user_out:
+            del user_out['password']
+        return jsonify(user_out), 200
+    else:
+        # Sign up flow: tell client we need details
+        return jsonify({"new_user": True, "email": email, "name": name, "google_id": google_id}), 200
 
 @app.route('/api/login', methods=['POST'])
 def login():

@@ -49,6 +49,13 @@
                 <button type="submit" class="btn btn-primary btn-block" style="padding: 1rem; font-size:1.1rem; margin-top:2rem;">Sign In</button>
             </form>
 
+            <div class="auth-separator">or</div>
+            
+            <button id="google-login-btn" class="btn btn-google btn-block" style="padding: 0.8rem 1rem; margin-top: 0;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google logo">
+                Continue with Google
+            </button>
+
             <div style="text-align: center; margin-top: 2.5rem; font-size: 0.95rem; border-top: 1px solid #efeef1; padding-top: 1.5rem;">
                 <span style="color: var(--text-muted);">Don't have an account?</span> 
                 <a href="register.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600; margin-left: 5px;">Register Here</a>
@@ -56,6 +63,44 @@
         </div>
     </div>
 
+    <!-- Simulated Google Accounts Selector Modal -->
+    <div id="google-accounts-modal" class="google-accounts-modal">
+        <div class="google-card">
+            <div class="google-card-header">
+                <img class="google-card-logo" src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo">
+                <h3>Choose an account</h3>
+                <p>to continue to Sahayata</p>
+            </div>
+            
+            <ul class="google-accounts-list" id="google-accounts-list">
+                <!-- Accounts will be dynamically injected by JS -->
+            </ul>
+            
+            <div class="google-custom-input" id="google-custom-input-section">
+                <div class="form-group">
+                    <label>Google Email</label>
+                    <input type="email" id="google-custom-email" placeholder="Enter custom Google email">
+                </div>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label>Display Name</label>
+                    <input type="text" id="google-custom-name" placeholder="Enter display name">
+                </div>
+                <button id="google-custom-submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">Continue</button>
+            </div>
+            
+            <div class="google-card-footer">
+                <span>English (United States)</span>
+                <div>
+                    <a href="#" style="margin-right: 12px;">Help</a>
+                    <a href="#" style="margin-right: 12px;">Privacy</a>
+                    <a href="#">Terms</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google Identity Services script for real integration support -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="auth.js"></script>
     <script type="text/javascript">
         function googleTranslateElementInit() {

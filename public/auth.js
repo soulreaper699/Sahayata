@@ -75,6 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
             errorMsg.style.display = 'none';
 
             const role = document.getElementById('role').value;
+            const googleIdVal = document.getElementById('google-id') ? document.getElementById('google-id').value : '';
+            const emailVal = document.getElementById('google-email') ? document.getElementById('google-email').value : '';
+            
             const payload = {
                 role: role,
                 name: document.getElementById('name').value,
@@ -82,6 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 lat: document.getElementById('lat').value,
                 lng: document.getElementById('lng').value
             };
+            
+            if (googleIdVal) payload.google_id = googleIdVal;
+            if (emailVal) payload.email = emailVal;
             
             if (role === 'donor') {
                 payload.phone = document.getElementById('phone').value;
@@ -133,6 +139,164 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             })
             .catch(err => console.error('Error fetching stats:', err));
+    }
+
+    // --- GOOGLE SIGN IN INTEGRATION ---
+    const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID'; // Developer can update this with a real client ID
+    const mockGoogleAccounts = [
+        { name: "Chirag Sharma", email: "chirag.donor@gmail.com", avatar: "CS" },
+        { name: "Robin Hood NGO", email: "robin.ngo@gmail.com", avatar: "RH" },
+        { name: "Farming Co-op", email: "farm.coop@gmail.com", avatar: "FC" }
+    ];
+
+    async function handleGoogleLogin(email, name, google_id) {
+        const errorMsg = document.getElementById('error-msg');
+        if (errorMsg) errorMsg.style.display = 'none';
+        
+        try {
+            const res = await fetch('/api/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ google_id, email, name })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.new_user) {
+                    // Redirect new Google user to registration page to select role & location
+                    window.location.href = `register.html?google_signup=true&email=${encodeURIComponent(data.email)}&name=${encodeURIComponent(data.name)}&google_id=${encodeURIComponent(data.google_id)}`;
+                } else {
+                    // Log in existing Google user
+                    localStorage.setItem('sustaina_user_v3', JSON.stringify(data));
+                    if (data.role === 'admin') window.location.href = 'admin.html';
+                    else window.location.href = data.role === 'donor' ? 'donor.html' : 'ngo.html';
+                }
+            } else {
+                const data = await res.json();
+                if (errorMsg) {
+                    errorMsg.textContent = data.error || 'Google sign-in failed';
+                    errorMsg.style.display = 'block';
+                }
+            }
+        } catch (err) {
+            if (errorMsg) {
+                errorMsg.textContent = 'Network error during Google sign-in';
+                errorMsg.style.display = 'block';
+            }
+        }
+    }
+
+    function openMockGoogleAccountsModal() {
+        const modal = document.getElementById('google-accounts-modal');
+        const list = document.getElementById('google-accounts-list');
+        if (!modal || !list) return;
+
+        list.innerHTML = '';
+        mockGoogleAccounts.forEach((acc, idx) => {
+            const li = document.createElement('li');
+            li.className = 'google-account-item';
+            li.innerHTML = `
+                <div class="google-account-avatar">${acc.avatar}</div>
+                <div class="google-account-details">
+                    <span class="google-account-name">${acc.name}</span>
+                    <span class="google-account-email">${acc.email}</span>
+                </div>
+            `;
+            li.addEventListener('click', () => {
+                modal.classList.remove('active');
+                handleGoogleLogin(acc.email, acc.name, 'google-mock-id-' + idx);
+            });
+            list.appendChild(li);
+        });
+
+        // Use custom account option
+        const customLi = document.createElement('li');
+        customLi.className = 'google-account-item';
+        customLi.innerHTML = `
+            <div class="google-account-avatar" style="background-color:#e8f0fe; color:#1a73e8;">+</div>
+            <div class="google-account-details">
+                <span class="google-account-name" style="color:#1a73e8;">Use another account</span>
+                <span class="google-account-email">Sign in with a custom Google email</span>
+            </div>
+        `;
+        customLi.addEventListener('click', () => {
+            document.getElementById('google-custom-input-section').classList.add('active');
+            list.style.display = 'none';
+        });
+        list.appendChild(customLi);
+
+        modal.classList.add('active');
+    }
+
+    // Initialize GIS if real client ID exists, otherwise bind custom mock modal
+    if (window.google && GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID') {
+        window.google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: async (response) => {
+                // Decode Google ID Token payload
+                try {
+                    const base64Url = response.credential.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+                    
+                    const jwtData = JSON.parse(jsonPayload);
+                    await handleGoogleLogin(jwtData.email, jwtData.name, jwtData.sub);
+                } catch (e) {
+                    console.error('Failed to parse Google credentials:', e);
+                }
+            }
+        });
+
+        const googleBtn = document.getElementById('google-login-btn');
+        if (googleBtn) {
+            googleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.google.accounts.id.prompt();
+            });
+        }
+    } else {
+        // Mock fallback binding
+        const googleBtn = document.getElementById('google-login-btn');
+        if (googleBtn) {
+            googleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                openMockGoogleAccountsModal();
+            });
+        }
+    }
+
+    // Modal click out closing
+    const accountsModal = document.getElementById('google-accounts-modal');
+    if (accountsModal) {
+        accountsModal.addEventListener('click', (e) => {
+            if (e.target === accountsModal) {
+                accountsModal.classList.remove('active');
+                document.getElementById('google-custom-input-section').classList.remove('active');
+                document.getElementById('google-accounts-list').style.display = 'block';
+            }
+        });
+    }
+
+    // Custom submit click
+    const customSubmit = document.getElementById('google-custom-submit');
+    if (customSubmit) {
+        customSubmit.addEventListener('click', () => {
+            const email = document.getElementById('google-custom-email').value;
+            const name = document.getElementById('google-custom-name').value;
+            if (!email || !name) {
+                alert('Please enter both email and name.');
+                return;
+            }
+            if (accountsModal) {
+                accountsModal.classList.remove('active');
+            }
+            document.getElementById('google-custom-input-section').classList.remove('active');
+            document.getElementById('google-accounts-list').style.display = 'block';
+            const mockId = 'google-mock-id-' + email.replace(/[^a-zA-Z0-9]/g, '');
+            handleGoogleLogin(email, name, mockId);
+        });
     }
 });
 
