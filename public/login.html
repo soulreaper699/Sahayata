@@ -51,10 +51,8 @@
 
             <div class="auth-separator">or</div>
             
-            <button id="google-login-btn" class="btn btn-google btn-block" style="padding: 0.8rem 1rem; margin-top: 0;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google logo">
-                Continue with Google
-            </button>
+            <!-- Standard Google Sign-In Button Container -->
+            <div id="google-login-btn-container" style="width: 100%; display: flex; justify-content: center; margin-top: 1rem; min-height: 40px;"></div>
 
             <div style="text-align: center; margin-top: 2.5rem; font-size: 0.95rem; border-top: 1px solid #efeef1; padding-top: 1.5rem;">
                 <span style="color: var(--text-muted);">Don't have an account?</span> 
@@ -101,6 +99,7 @@
 
     <!-- Google Identity Services script for real integration support -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="config.js"></script>
     <script src="auth.js"></script>
     <script type="text/javascript">
         function googleTranslateElementInit() {

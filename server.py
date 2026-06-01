@@ -190,12 +190,34 @@ def register():
 @app.route('/api/auth/google', methods=['POST'])
 def google_auth():
     content = request.json
-    google_id = content.get('google_id')
-    email = content.get('email')
-    name = content.get('name')
+    id_token_val = content.get('id_token')
     
+    if id_token_val:
+        # Real Google OAuth verification using Google's tokeninfo API
+        try:
+            import urllib.request
+            import json
+            url = f"https://oauth2.googleapis.com/tokeninfo?id_token={id_token_val}"
+            req = urllib.request.Request(url, method="GET")
+            with urllib.request.urlopen(req, timeout=5) as res:
+                if res.getcode() == 200:
+                    idinfo = json.loads(res.read().decode('utf-8'))
+                    google_id = idinfo.get('sub')
+                    email = idinfo.get('email')
+                    name = idinfo.get('name')
+                else:
+                    return jsonify({"error": "Invalid Google token"}), 400
+        except Exception as e:
+            print("Token verification error:", e)
+            return jsonify({"error": "Failed to verify Google token with Google servers"}), 400
+    else:
+        # Fallback to mock login fields
+        google_id = content.get('google_id')
+        email = content.get('email')
+        name = content.get('name')
+        
     if not google_id or not email:
-        return jsonify({"error": "Missing google_id or email"}), 400
+        return jsonify({"error": "Missing google credentials"}), 400
         
     conn = get_db()
     c = conn.cursor()

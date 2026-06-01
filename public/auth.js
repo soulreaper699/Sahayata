@@ -142,22 +142,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- GOOGLE SIGN IN INTEGRATION ---
-    const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID'; // Developer can update this with a real client ID
     const mockGoogleAccounts = [
         { name: "Chirag Sharma", email: "chirag.donor@gmail.com", avatar: "CS" },
         { name: "Robin Hood NGO", email: "robin.ngo@gmail.com", avatar: "RH" },
         { name: "Farming Co-op", email: "farm.coop@gmail.com", avatar: "FC" }
     ];
 
-    async function handleGoogleLogin(email, name, google_id) {
+    async function handleGoogleLogin(email, name, google_id, id_token = null) {
         const errorMsg = document.getElementById('error-msg');
         if (errorMsg) errorMsg.style.display = 'none';
         
         try {
+            const payload = id_token ? { id_token } : { google_id, email, name };
             const res = await fetch('/api/auth/google', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ google_id, email, name })
+                body: JSON.stringify(payload)
             });
 
             if (res.ok) {
@@ -229,41 +229,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Initialize GIS if real client ID exists, otherwise bind custom mock modal
-    if (window.google && GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID') {
-        window.google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
-            callback: async (response) => {
-                // Decode Google ID Token payload
-                try {
-                    const base64Url = response.credential.split('.')[1];
-                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                    }).join(''));
-                    
-                    const jwtData = JSON.parse(jsonPayload);
-                    await handleGoogleLogin(jwtData.email, jwtData.name, jwtData.sub);
-                } catch (e) {
-                    console.error('Failed to parse Google credentials:', e);
-                }
-            }
-        });
-
-        const googleBtn = document.getElementById('google-login-btn');
-        if (googleBtn) {
-            googleBtn.addEventListener('click', (e) => {
+    const googleBtnContainer = document.getElementById('google-login-btn-container');
+    if (googleBtnContainer) {
+        const isPlaceholder = !window.CONFIG || CONFIG.GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID';
+        
+        if (isPlaceholder) {
+            // Render a high-fidelity placeholder Google button
+            googleBtnContainer.innerHTML = `
+                <button id="google-login-btn" class="btn btn-google btn-block" style="padding: 0.8rem 1rem; margin-top: 0; display: flex; align-items: center; justify-content: center; width: 100%;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google logo" style="width:20px; height:20px; margin-right:12px;">
+                    Continue with Google (Demo Mode)
+                </button>
+            `;
+            const demoBtn = document.getElementById('google-login-btn');
+            demoBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                window.google.accounts.id.prompt();
-            });
-        }
-    } else {
-        // Mock fallback binding
-        const googleBtn = document.getElementById('google-login-btn');
-        if (googleBtn) {
-            googleBtn.addEventListener('click', (e) => {
-                e.preventDefault();
+                alert("ℹ️ Sahayata is in Google Login Demo Mode.\n\nTo connect the real Google Login:\n1. Update CONFIG.GOOGLE_CLIENT_ID in public/config.js with your Google Client ID.\n2. We will now open the mock Google accounts chooser so you can test the login flow!");
                 openMockGoogleAccountsModal();
             });
+        } else {
+            // Render the official Google Sign-In button
+            const initGIS = () => {
+                if (window.google) {
+                    window.google.accounts.id.initialize({
+                        client_id: CONFIG.GOOGLE_CLIENT_ID,
+                        callback: async (response) => {
+                            // Send ID Token to backend for verification
+                            await handleGoogleLogin(null, null, null, response.credential);
+                        }
+                    });
+                    
+                    window.google.accounts.id.renderButton(
+                        googleBtnContainer,
+                        { theme: "outline", size: "large", width: googleBtnContainer.offsetWidth || 340, text: "continue_with" }
+                    );
+                }
+            };
+
+            window.onload = initGIS;
+            // Execute immediately if google object is already available
+            if (window.google) {
+                initGIS();
+            }
         }
     }
 
